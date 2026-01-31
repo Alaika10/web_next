@@ -1,0 +1,7 @@
+{
+  "name": "Zenith Portfolio CMS",
+  "description": "A high-performance personal portfolio with a built-in admin dashboard for managing blogs, projects, and profile details, featuring AI-powered content generation.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
