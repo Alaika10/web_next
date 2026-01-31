@@ -1,10 +1,10 @@
-
+'use client';
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { usePathname } from 'next/navigation';
 
 const Footer: React.FC = () => {
-  const location = useLocation();
-  const isAdminPath = location.pathname.startsWith('/admin');
+  const pathname = usePathname();
+  const isAdminPath = pathname?.startsWith('/admin');
 
   if (isAdminPath) return null;
 

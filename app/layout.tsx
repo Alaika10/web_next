@@ -4,16 +4,39 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 /**
- * RootLayout: Next.js standard wrapper for all pages.
+ * RootLayout: Next.js standard wrapper.
+ * Kita menambahkan script Tailwind CDN di sini karena Next.js mengabaikan index.html.
  */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const globalStyles = `
+    body { font-family: 'Inter', sans-serif; }
+    .glass-effect { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
+    .dark .glass-effect { background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    .dark ::-webkit-scrollbar-thumb { background: #1e293b; }
+  `;
+
   return (
-    <div className="min-h-screen flex flex-col selection:bg-indigo-100 selection:text-indigo-900 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 transition-colors duration-300 antialiased">
-      <Navbar />
-      <main className="flex-grow">
-        {children}
-      </main>
-      <Footer />
-    </div>
+    <html lang="en" className="scroll-smooth">
+      <head>
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Zenith | Portfolio & AI CMS</title>
+        {/* Load Tailwind CDN agar styling class berfungsi */}
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet" />
+        <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
+      </head>
+      <body className="min-h-screen flex flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50 selection:bg-indigo-100 selection:text-indigo-900 transition-colors duration-300 antialiased">
+        <Navbar />
+        <main className="flex-grow">
+          {children}
+        </main>
+        <Footer />
+      </body>
+    </html>
   );
 }

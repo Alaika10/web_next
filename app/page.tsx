@@ -1,7 +1,7 @@
 
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { Profile, Project, BlogPost } from '../types';
 import { supabase } from '../lib/supabase';
 import { INITIAL_PROFILE, INITIAL_PROJECTS, INITIAL_BLOGS } from '../constants';
@@ -49,10 +49,10 @@ export default function HomePage() {
             {profile.about.substring(0, 180)}...
           </p>
           <div className="flex flex-wrap gap-4 pt-4">
-            <Link to="/projects" className="px-8 py-3.5 bg-indigo-600 text-white rounded-2xl font-semibold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none">
+            <Link href="/projects" className="px-8 py-3.5 bg-indigo-600 text-white rounded-2xl font-semibold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none">
               Explore Projects
             </Link>
-            <Link to="/about" className="px-8 py-3.5 border-2 border-slate-200 dark:border-slate-800 rounded-2xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
+            <Link href="/about" className="px-8 py-3.5 border-2 border-slate-200 dark:border-slate-800 rounded-2xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
               About Journey
             </Link>
           </div>
@@ -72,7 +72,7 @@ export default function HomePage() {
             <h2 className="text-3xl font-bold">Featured Projects</h2>
             <p className="text-slate-500">Selected works that define my expertise.</p>
           </div>
-          <Link to="/projects" className="text-indigo-600 font-bold hover:underline flex items-center gap-2">View All Works <span>→</span></Link>
+          <Link href="/projects" className="text-indigo-600 font-bold hover:underline flex items-center gap-2">View All Works <span>→</span></Link>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -81,7 +81,7 @@ export default function HomePage() {
               <div className="h-72 overflow-hidden relative">
                 <img src={project.imageUrl || (project as any).image_url} alt={project.title} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" />
                 <div className="absolute inset-0 bg-indigo-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                  <Link to="/projects" className="bg-white text-indigo-900 px-6 py-2.5 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">Details View</Link>
+                  <Link href="/projects" className="bg-white text-indigo-900 px-6 py-2.5 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">Details View</Link>
                 </div>
               </div>
               <div className="p-8 space-y-4">
@@ -98,7 +98,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Stats / Skills Teaser */}
+      {/* Stats Section */}
       <section className="bg-indigo-600 rounded-[3rem] p-12 md:p-20 text-white relative overflow-hidden shadow-2xl shadow-indigo-200 dark:shadow-none">
         <div className="absolute inset-0 bg-gradient-to-tr from-indigo-900 to-transparent opacity-50"></div>
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
@@ -107,16 +107,6 @@ export default function HomePage() {
             <p className="text-indigo-100 text-lg opacity-90 leading-relaxed">
               From architecting scalable backends to crafting delightful user interfaces, I bring a holistic approach to product development.
             </p>
-            <div className="flex gap-12 pt-4">
-              <div>
-                <span className="text-5xl font-black block">8+</span>
-                <span className="text-indigo-200 text-sm font-medium uppercase tracking-wider">Years Exp</span>
-              </div>
-              <div>
-                <span className="text-5xl font-black block">50+</span>
-                <span className="text-indigo-200 text-sm font-medium uppercase tracking-wider">Clients</span>
-              </div>
-            </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
              {profile.skills.slice(0, 4).map(skill => (
@@ -138,7 +128,7 @@ export default function HomePage() {
             <h2 className="text-3xl font-bold">Latest Jargon</h2>
             <p className="text-slate-500">Thoughts on technology and design systems.</p>
           </div>
-          <Link to="/blog" className="text-indigo-600 font-bold hover:underline">All Posts →</Link>
+          <Link href="/blog" className="text-indigo-600 font-bold hover:underline">All Posts →</Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {blogs.map(post => (

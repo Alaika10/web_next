@@ -1,20 +1,19 @@
-
+'use client';
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { isAuthenticated, logoutAdmin } from '../lib/auth';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { isAuthenticated } from '../lib/auth';
 
 const Navbar: React.FC = () => {
-  const location = useLocation();
+  const pathname = usePathname();
   const [isAuth, setIsAuth] = useState(false);
   
-  // Deteksi rute admin secara ketat
-  const isAdminPath = location.pathname.startsWith('/admin');
+  const isAdminPath = pathname?.startsWith('/admin');
 
   useEffect(() => {
     setIsAuth(isAuthenticated());
-  }, [location]);
+  }, [pathname]);
 
-  // JANGAN merender Navbar jika di rute admin
   if (isAdminPath) return null;
 
   const links = [
@@ -26,7 +25,7 @@ const Navbar: React.FC = () => {
 
   return (
     <nav className="sticky top-0 z-50 glass-effect border-b py-4 px-6 md:px-12 flex justify-between items-center h-20">
-      <Link to="/" className="flex items-center gap-3 group">
+      <Link href="/" className="flex items-center gap-3 group">
         <div className="w-11 h-11 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-100 dark:shadow-none transition-transform group-hover:rotate-12">Z</div>
         <span className="font-black text-xl tracking-tighter hidden sm:block uppercase">Zenith</span>
       </Link>
@@ -35,9 +34,9 @@ const Navbar: React.FC = () => {
         {links.map((link) => (
           <Link
             key={link.path}
-            to={link.path}
+            href={link.path}
             className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-              location.pathname === link.path 
+              pathname === link.path 
               ? 'bg-white dark:bg-slate-800 text-indigo-600 shadow-sm' 
               : 'text-slate-500 hover:text-indigo-600'
             }`}
@@ -50,14 +49,14 @@ const Navbar: React.FC = () => {
       <div className="flex items-center gap-3">
         {isAuth ? (
           <Link 
-            to="/admin" 
+            href="/admin" 
             className="hidden sm:flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-2xl text-xs font-black hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none uppercase tracking-widest"
           >
             Console
           </Link>
         ) : (
           <Link 
-            to="/login" 
+            href="/login" 
             className="flex items-center gap-2 bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-2xl text-xs font-black hover:opacity-80 transition-all uppercase tracking-widest"
           >
             Login
