@@ -1,6 +1,7 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import VercelAnalytics from '../components/VercelAnalytics';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const globalStyles = `
@@ -62,6 +63,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </main>
         <Footer />
+        {/* Vercel Tracking Tools */}
+        <VercelAnalytics />
       </body>
     </html>
   );
