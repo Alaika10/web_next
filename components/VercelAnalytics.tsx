@@ -1,18 +1,16 @@
 'use client';
 
 import React from 'react';
-// @ts-ignore
-import { Analytics } from '@vercel/analytics/react';
-// @ts-ignore
+import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
 /**
  * VercelAnalytics Component
- * Menambahkan @ts-ignore untuk mengatasi masalah resolusi modul di editor lokal
- * yang sering terjadi jika node_modules belum sepenuhnya terindeks oleh TS Server.
+ * Integrates Vercel Analytics and Speed Insights for Next.js App Router
+ * Uses the recommended '@vercel/analytics/next' import for optimal Next.js integration
  */
 export default function VercelAnalytics() {
-  // Hanya jalankan di production untuk menghindari tracking sampah saat development
+  // Only run in production to avoid tracking during development
   if (process.env.NODE_ENV !== 'production') {
     return null;
   }
