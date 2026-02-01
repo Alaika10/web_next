@@ -1,7 +1,7 @@
 
 'use client';
-import React from 'react';
-import { Trash2, Plus, Briefcase, Share2, Award, User as UserIcon } from 'lucide-react';
+import React, { useRef } from 'react';
+import { Trash2, Plus, Briefcase, Share2, Award, User as UserIcon, Camera, Upload, X } from 'lucide-react';
 import { Profile, Experience } from '../../types';
 
 interface ProfileTabProps {
@@ -10,6 +10,29 @@ interface ProfileTabProps {
 }
 
 export default function ProfileTab({ profile, onProfileChange }: ProfileTabProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Avatar Upload Handler (Base64)
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert("File is too large. Please select an image under 2MB.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        onProfileChange({ avatar: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const triggerUpload = () => {
+    fileInputRef.current?.click();
+  };
+
   // Skills Handlers
   const updateSkill = (index: number, updates: any) => {
     const newSkills = [...(profile.skills || [])];
@@ -22,7 +45,6 @@ export default function ProfileTab({ profile, onProfileChange }: ProfileTabProps
   };
 
   const addSkill = () => {
-    // Dipastikan menggunakan kategori yang valid: 'Frontend' | 'Backend' | 'Design' | 'Other'
     onProfileChange({ 
       skills: [...(profile.skills || []), { name: 'New Skill', level: 50, category: 'Other' }] 
     });
@@ -61,25 +83,61 @@ export default function ProfileTab({ profile, onProfileChange }: ProfileTabProps
       <section className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 p-8 md:p-12 shadow-sm space-y-10">
         <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-6">
           <UserIcon className="text-indigo-600" size={24} />
-          <h3 className="text-xl font-black">Identity & Bio</h3>
+          <h3 className="text-xl font-black">Identity & Research Bio</h3>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-12 items-start">
-          <div className="w-full lg:w-48 space-y-4">
-            <div className="aspect-square rounded-[2.5rem] overflow-hidden border-4 border-slate-100 dark:border-slate-800 shadow-xl bg-slate-50">
-              <img src={profile.avatar} className="w-full h-full object-cover" alt="Avatar Preview" />
+          {/* Enhanced Avatar Upload */}
+          <div className="w-full lg:w-56 flex flex-col items-center gap-6">
+            <div className="relative group">
+              <div className="w-48 h-48 rounded-[2.5rem] overflow-hidden border-4 border-slate-100 dark:border-slate-800 shadow-2xl bg-slate-50 relative">
+                {profile.avatar ? (
+                  <img src={profile.avatar} className="w-full h-full object-cover transition-transform group-hover:scale-110" alt="Avatar Preview" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-300">
+                    <UserIcon size={64} />
+                  </div>
+                )}
+                
+                {/* Overlay on Hover */}
+                <div 
+                  onClick={triggerUpload}
+                  className="absolute inset-0 bg-indigo-900/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white text-center p-4 backdrop-blur-sm"
+                >
+                  <Camera size={32} className="mb-2" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Change Image</span>
+                </div>
+              </div>
+
+              {profile.avatar && (
+                <button 
+                  onClick={() => onProfileChange({ avatar: '' })}
+                  className="absolute -top-3 -right-3 w-8 h-8 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 shadow-lg flex items-center justify-center text-red-500 hover:scale-110 transition-transform"
+                >
+                  <X size={16} />
+                </button>
+              )}
             </div>
-            <div>
-              <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Avatar URL</label>
+
+            <div className="w-full space-y-3">
               <input 
-                className="w-full mt-1 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-2 text-[10px] border border-transparent focus:border-indigo-600 outline-none"
-                value={profile.avatar}
-                onChange={(e) => onProfileChange({ avatar: e.target.value })}
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                className="hidden" 
+                accept="image/*"
               />
+              <button 
+                onClick={triggerUpload}
+                className="w-full py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+              >
+                <Upload size={14} /> Upload New Photo
+              </button>
+              <p className="text-center text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Recommended: Square PNG/JPG, Max 2MB</p>
             </div>
           </div>
 
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Full Display Name</label>
               <input 
@@ -97,7 +155,7 @@ export default function ProfileTab({ profile, onProfileChange }: ProfileTabProps
               />
             </div>
             <div className="md:col-span-2 space-y-2">
-              <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">About / Biography</label>
+              <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Scientific Bio / Research Interests</label>
               <textarea 
                 className="w-full h-40 p-6 bg-slate-50 dark:bg-slate-800 rounded-[2rem] border-2 border-transparent focus:border-indigo-600 outline-none transition-all leading-relaxed" 
                 value={profile.about} 
@@ -113,10 +171,10 @@ export default function ProfileTab({ profile, onProfileChange }: ProfileTabProps
         <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-6">
           <div className="flex items-center gap-3">
             <Award className="text-indigo-600" size={24} />
-            <h3 className="text-xl font-black">Expertise Arsenal</h3>
+            <h3 className="text-xl font-black">Technical Expertise</h3>
           </div>
           <button onClick={addSkill} className="flex items-center gap-2 text-xs font-black text-indigo-600 uppercase tracking-widest hover:bg-indigo-50 px-4 py-2 rounded-xl transition-colors">
-            <Plus size={16} /> Add Skill
+            <Plus size={16} /> Add Expertise
           </button>
         </div>
 
@@ -152,7 +210,7 @@ export default function ProfileTab({ profile, onProfileChange }: ProfileTabProps
         <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-6">
           <div className="flex items-center gap-3">
             <Briefcase className="text-indigo-600" size={24} />
-            <h3 className="text-xl font-black">Career Timeline</h3>
+            <h3 className="text-xl font-black">Engineering Timeline</h3>
           </div>
           <button onClick={addExperience} className="flex items-center gap-2 text-xs font-black text-indigo-600 uppercase tracking-widest hover:bg-indigo-50 px-4 py-2 rounded-xl transition-colors">
             <Plus size={16} /> Add Milestone
@@ -171,7 +229,7 @@ export default function ProfileTab({ profile, onProfileChange }: ProfileTabProps
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Company</label>
+                  <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Institution / Company</label>
                   <input 
                     className="w-full bg-white dark:bg-slate-900 px-4 py-3 rounded-xl font-bold border border-transparent focus:border-indigo-600 outline-none text-sm"
                     value={exp.company}
@@ -196,7 +254,7 @@ export default function ProfileTab({ profile, onProfileChange }: ProfileTabProps
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Responsibilities</label>
+                <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Key Responsibilities / Impact</label>
                 <textarea 
                   className="w-full bg-white dark:bg-slate-900 p-5 rounded-xl border border-transparent focus:border-indigo-600 outline-none text-sm leading-relaxed h-24"
                   value={exp.description}
@@ -212,14 +270,14 @@ export default function ProfileTab({ profile, onProfileChange }: ProfileTabProps
       <section className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 p-8 md:p-12 shadow-sm space-y-8">
         <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-6">
           <Share2 className="text-indigo-600" size={24} />
-          <h3 className="text-xl font-black">Social Connectivity</h3>
+          <h3 className="text-xl font-black">Digital Presence</h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {['github', 'linkedin', 'twitter'].map((platform) => (
             <div key={platform} className="space-y-2">
               <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
-                <span className="capitalize">{platform}</span> URL
+                <span className="capitalize">{platform}</span> Handle URL
               </label>
               <input 
                 className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl font-medium border-2 border-transparent focus:border-indigo-600 outline-none transition-all text-sm"

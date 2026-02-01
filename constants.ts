@@ -3,31 +3,31 @@ import { Profile, Project, BlogPost } from './types';
 
 export const INITIAL_PROFILE: Profile = {
   name: "Alex Sterling",
-  title: "Senior Full Stack Engineer & Designer",
-  about: "I'm a passionate developer with over 8 years of experience building scalable web applications. I love bridging the gap between design and code, creating seamless user experiences that solve real-world problems. When I'm not coding, you'll find me exploring mountains or reading about AI ethics.",
+  title: "Data Scientist & Machine Learning Engineer",
+  about: "I'm a researcher and engineer specialized in Deep Learning and Predictive Analytics. With over 6 years of experience, I bridge the gap between raw data and actionable intelligence. I build neural architectures that solve complex business problems, from computer vision to natural language processing. My mission is to turn massive datasets into competitive advantages.",
   skills: [
-    { name: "React / Next.js", level: 95, category: "Frontend" },
-    { name: "TypeScript", level: 90, category: "Frontend" },
-    { name: "Node.js", level: 85, category: "Backend" },
-    { name: "Tailwind CSS", level: 98, category: "Design" },
-    { name: "PostgreSQL", level: 80, category: "Backend" },
-    { name: "UI/UX Design", level: 88, category: "Design" }
+    { name: "Python / PyTorch", level: 95, category: "Backend" },
+    { name: "Scikit-Learn", level: 90, category: "Backend" },
+    { name: "Deep Learning", level: 92, category: "Other" },
+    { name: "SQL & BigQuery", level: 88, category: "Backend" },
+    { name: "Data Visualization (D3/Tableau)", level: 85, category: "Design" },
+    { name: "MLOps & Docker", level: 80, category: "Other" }
   ],
   experience: [
     {
-      company: "TechNova Solutions",
-      role: "Lead Frontend Engineer",
+      company: "NeuralMind AI",
+      role: "Lead Machine Learning Engineer",
       period: "2021 - Present",
-      description: "Leading a team of 12 engineers in developing a multi-tenant SaaS platform used by Fortune 500 companies."
+      description: "Architecting large-scale recommendation systems and deploying LLMs for automated customer insight extraction."
     },
     {
-      company: "Creative Pulse",
-      role: "Senior Full Stack Developer",
+      company: "DataSphere Corp",
+      role: "Senior Data Scientist",
       period: "2018 - 2021",
-      description: "Designed and implemented robust backend architectures and highly interactive client interfaces."
+      description: "Developed predictive maintenance models for industrial IoT sensors, reducing downtime by 24% across 3 global factories."
     }
   ],
-  avatar: "https://picsum.photos/seed/alex/400/400",
+  avatar: "https://picsum.photos/seed/data-alex/400/400",
   socials: {
     github: "https://github.com",
     linkedin: "https://linkedin.com",
@@ -38,33 +38,33 @@ export const INITIAL_PROFILE: Profile = {
 export const INITIAL_PROJECTS: Project[] = [
   {
     id: "1",
-    title: "E-Commerce Re-imagined",
-    description: "A headless commerce solution using Next.js and Shopify API, focusing on speed and accessibility.",
-    imageUrl: "https://picsum.photos/seed/shop/800/450",
-    technologies: ["Next.js", "Tailwind", "Shopify"],
+    title: "NeuroVision Scanner",
+    description: "A real-time object detection system optimized for low-latency edge computing using YOLOv8 and TensorRT.",
+    imageUrl: "https://images.unsplash.com/photo-1507413245164-6160d8298b31?q=80&w=800",
+    technologies: ["PyTorch", "OpenCV", "CUDA"],
     link: "#",
-    createdAt: "2023-10-15"
+    createdAt: "2023-11-20"
   },
   {
     id: "2",
-    title: "TaskFlow Pro",
-    description: "A productivity dashboard with real-time collaboration features and advanced data visualization.",
-    imageUrl: "https://picsum.photos/seed/flow/800/450",
-    technologies: ["React", "Firebase", "D3.js"],
+    title: "MarketSentient AI",
+    description: "NLP-driven market analysis tool that predicts stock volatility by analyzing millions of social media signals and news feeds.",
+    imageUrl: "https://images.unsplash.com/photo-1551288049-bbbda536339a?q=80&w=800",
+    technologies: ["Transformers", "Python", "FastAPI"],
     link: "#",
-    createdAt: "2023-08-10"
+    createdAt: "2023-09-05"
   }
 ];
 
 export const INITIAL_BLOGS: BlogPost[] = [
   {
     id: "1",
-    title: "The Future of Web Development with AI",
-    excerpt: "How generative AI is changing the way we write code and design interfaces.",
-    content: "Full content of the blog post about AI...",
-    imageUrl: "https://picsum.photos/seed/ai/800/450",
-    author: "Alex Sterling",
-    date: "2024-01-20",
-    tags: ["AI", "Web Dev", "Trends"]
+    title: "Understanding Attention Mechanisms in Transformers",
+    excerpt: "A deep dive into why Self-Attention is the most important breakthrough in modern NLP architectures.",
+    content: "Full content about transformers and attention mechanisms...",
+    imageUrl: "https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=800",
+    author: "Alaika Izatul Ilmi",
+    date: "2024-02-10",
+    tags: ["Deep Learning", "NLP", "AI"]
   }
 ];
