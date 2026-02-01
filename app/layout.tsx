@@ -45,10 +45,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Zenith Lab | Alex Sterling AI & ML Engineer</title>
+        <title>Data Lab | Alaika AI & ML Engineer</title>
         
-        {/* Modern SVG Favicon */}
-        <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='25' fill='%234f46e5'/%3E%3Cpath d='M30 30 L70 30 L30 70 L70 70' stroke='white' stroke-width='12' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3Ccircle cx='70' cy='30' r='8' fill='%23818cf8'/%3E%3C/svg%3E" />
+        {/* Modern SVG Favicon with Letter 'D' */}
+        <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='30' fill='%234f46e5'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-weight='900' font-size='65' fill='white'%3ED%3C/text%3E%3C/svg%3E" />
         
         <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
