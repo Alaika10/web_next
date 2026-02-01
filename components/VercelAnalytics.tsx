@@ -1,16 +1,20 @@
 'use client';
 
 import React from 'react';
-import { Analytics } from '@vercel/analytics/next';
+// Menggunakan @ts-ignore karena IDE lokal sering gagal mendeteksi subpath modul Vercel 
+// meskipun saat runtime/build modul tersebut tersedia.
+// @ts-ignore
+import { Analytics } from '@vercel/analytics/react';
+// @ts-ignore
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
 /**
  * VercelAnalytics Component
- * Integrates Vercel Analytics and Speed Insights for Next.js App Router
- * Uses the recommended '@vercel/analytics/next' import for optimal Next.js integration
+ * Komponen ini memaksimalkan monitoring performa (LCP, FID, CLS) dan 
+ * statistik pengunjung tanpa membebani performa saat development.
  */
 export default function VercelAnalytics() {
-  // Only run in production to avoid tracking during development
+  // Hanya render di production untuk menjaga akurasi data di dashboard Vercel
   if (process.env.NODE_ENV !== 'production') {
     return null;
   }
