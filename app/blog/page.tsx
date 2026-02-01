@@ -1,12 +1,12 @@
 
 'use client';
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { BlogPost } from '../../types';
 import { supabase } from '../../lib/supabase';
-import { INITIAL_BLOGS } from '../../constants';
 
 export default function BlogPage() {
-  const [blogs, setBlogs] = useState<BlogPost[]>(INITIAL_BLOGS);
+  const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,33 +41,39 @@ export default function BlogPage() {
       </div>
 
       <div className="space-y-20">
-        {blogs.map((post) => (
-          <article key={post.id} className="group grid grid-cols-1 md:grid-cols-12 gap-10 items-center">
-            <div className="md:col-span-5 aspect-[16/10] rounded-[2rem] overflow-hidden border border-slate-100 dark:border-slate-800 shadow-sm">
-              <img 
-                src={post.imageUrl || (post as any).image_url} 
-                alt={post.title} 
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
-              />
-            </div>
-            <div className="md:col-span-7 space-y-6">
-              <div className="flex items-center gap-4 text-[10px] font-black text-indigo-600 uppercase tracking-widest">
-                <span className="bg-indigo-50 dark:bg-indigo-950/50 px-3 py-1 rounded-full">{post.date}</span>
-                <span className="w-1.5 h-1.5 bg-slate-300 rounded-full"></span>
-                <span>{post.tags?.[0] || 'Article'}</span>
+        {blogs.length === 0 ? (
+          <div className="text-center py-20 bg-slate-50 dark:bg-slate-900 rounded-[3rem] border border-dashed">
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No articles published yet</p>
+          </div>
+        ) : (
+          blogs.map((post) => (
+            <article key={post.id} className="group grid grid-cols-1 md:grid-cols-12 gap-10 items-center">
+              <div className="md:col-span-5 aspect-[16/10] rounded-[2rem] overflow-hidden border border-slate-100 dark:border-slate-800 shadow-sm">
+                <img 
+                  src={post.imageUrl || (post as any).image_url} 
+                  alt={post.title} 
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                />
               </div>
-              <h2 className="text-3xl font-bold group-hover:text-indigo-600 transition-colors leading-tight">{post.title}</h2>
-              <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
-                {post.excerpt}
-              </p>
-              <div className="pt-2">
-                <button className="px-6 py-2 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
-                  Read Full Post
-                </button>
+              <div className="md:col-span-7 space-y-6">
+                <div className="flex items-center gap-4 text-[10px] font-black text-indigo-600 uppercase tracking-widest">
+                  <span className="bg-indigo-50 dark:bg-indigo-950/50 px-3 py-1 rounded-full">{post.date}</span>
+                  <span className="w-1.5 h-1.5 bg-slate-300 rounded-full"></span>
+                  <span>{post.tags?.[0] || 'Article'}</span>
+                </div>
+                <h2 className="text-3xl font-bold group-hover:text-indigo-600 transition-colors leading-tight">{post.title}</h2>
+                <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
+                  {post.excerpt}
+                </p>
+                <div className="pt-2">
+                  <Link href={`/blog/${post.id}`} className="inline-block px-6 py-2 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
+                    Read Full Post
+                  </Link>
+                </div>
               </div>
-            </div>
-          </article>
-        ))}
+            </article>
+          ))
+        )}
       </div>
     </div>
   );
