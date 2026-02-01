@@ -7,7 +7,7 @@ import { generateBlogDraft, generateProjectDescription } from '../../services/ge
 import { supabase } from '../../lib/supabase';
 import { INITIAL_PROFILE } from '../../constants';
 import { isAuthenticated } from '../../lib/auth';
-import { Sparkles, Menu } from 'lucide-react';
+import { Sparkles, Menu, CheckCircle2, AlertCircle } from 'lucide-react';
 
 // Import Modular Components
 import AdminSidebar from '../../components/admin/AdminSidebar';
@@ -27,11 +27,11 @@ export default function AdminPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   const isSupabase = !!supabase;
 
   useEffect(() => {
-    // Auth Guard: Redirect jika belum login
     if (!isAuthenticated()) {
       router.push('/login');
       return;
@@ -43,10 +43,13 @@ export default function AdminPage() {
         return;
       }
       try {
-        const { data: p } = await supabase.from('profiles').select('*').single();
+        const { data: p, error } = await supabase.from('profiles').select('*').maybeSingle();
+        // maybeSingle() tidak akan melempar error jika data kosong (PGRST116)
         if (p) setProfile(p);
+        
         const { data: projs } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
         if (projs) setProjects(projs || []);
+        
         const { data: b } = await supabase.from('blogs').select('*').order('date', { ascending: false });
         if (b) setBlogs(b || []);
       } catch (err) {
@@ -59,7 +62,6 @@ export default function AdminPage() {
     refreshData();
   }, [router]);
 
-  // Action Handlers
   const addProject = async () => {
     if (!supabase) return;
     setIsSaving(true);
@@ -101,7 +103,6 @@ export default function AdminPage() {
     if (!supabase || !confirm("Permanent delete? This cannot be undone.")) return;
     setIsSaving(true);
     await supabase.from(table).delete().eq('id', id);
-    // Local refresh
     if (table === 'projects') setProjects(projects.filter(p => p.id !== id));
     else setBlogs(blogs.filter(b => b.id !== id));
     setIsSaving(false);
@@ -119,11 +120,39 @@ export default function AdminPage() {
   const saveProfile = async () => {
     if (!supabase) return;
     setIsSaving(true);
-    await supabase.from('profiles').upsert({ id: profile.id || 1, ...profile });
-    setIsSaving(false);
+    setSaveStatus('idle');
+    
+    try {
+      // Pastikan payload bersih dan sesuai dengan skema DB
+      const payload = {
+        id: profile.id || 1, // Gunakan ID 1 sebagai default untuk single-profile portfolio
+        name: profile.name,
+        title: profile.title,
+        about: profile.about,
+        avatar: profile.avatar,
+        skills: profile.skills, // Simpan sebagai JSONB
+        experience: profile.experience, // Simpan sebagai JSONB
+        socials: profile.socials, // Simpan sebagai JSONB
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase.from('profiles').upsert(payload, { onConflict: 'id' });
+
+      if (error) {
+        console.error("Supabase Upsert Error:", error);
+        throw error;
+      }
+      
+      setSaveStatus('success');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    } catch (err) {
+      console.error("Full Save Error Context:", err);
+      setSaveStatus('error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  // AI Logic
   const aiRefineProject = async (id: string, title: string, tech: string[]) => {
     setIsAiLoading(true);
     try {
@@ -153,7 +182,7 @@ export default function AdminPage() {
   if (loading) return (
     <div className="h-screen flex flex-col items-center justify-center gap-4 bg-slate-50 dark:bg-slate-950">
       <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-      <p className="font-bold text-slate-500 uppercase tracking-widest text-xs">Verifying Access...</p>
+      <p className="font-bold text-slate-500 uppercase tracking-widest text-xs">Authenticating Studio...</p>
     </div>
   );
 
@@ -173,7 +202,18 @@ export default function AdminPage() {
         isOpen={isSidebarOpen} 
       />
 
-      <main className="flex-1 overflow-y-auto h-screen p-6 md:p-12">
+      <main className="flex-1 overflow-y-auto h-screen p-6 md:p-12 relative">
+        {saveStatus !== 'idle' && (
+          <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-6 py-3 rounded-2xl shadow-2xl animate-in slide-in-from-top-4 duration-300 ${
+            saveStatus === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'
+          }`}>
+            {saveStatus === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
+            <p className="font-bold text-sm tracking-tight">
+              {saveStatus === 'success' ? 'Profile synchronized successfully!' : 'Error syncing profile. Check console for details.'}
+            </p>
+          </div>
+        )}
+
         <AdminHeader 
           activeTab={activeTab}
           isSupabase={isSupabase}
@@ -218,7 +258,8 @@ export default function AdminPage() {
                 <div className="w-20 h-20 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
                 <Sparkles className="absolute inset-0 m-auto text-indigo-600 animate-pulse" size={32} />
               </div>
-              <h4 className="text-xl font-black mb-2">Gemini Thinking</h4>
+              <h4 className="text-xl font-black mb-2 tracking-tight">AI is Processing</h4>
+              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Generating Content...</p>
             </div>
           </div>
         )}
