@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -7,14 +8,17 @@ import { isAuthenticated } from '../lib/auth';
 const Navbar: React.FC = () => {
   const pathname = usePathname();
   const [isAuth, setIsAuth] = useState(false);
+  const [mounted, setMounted] = useState(false);
   
   const isAdminPath = pathname?.startsWith('/admin');
 
   useEffect(() => {
+    setMounted(true);
     setIsAuth(isAuthenticated());
   }, [pathname]);
 
-  if (isAdminPath) return null;
+  // Hindari render navbar pada path admin atau sebelum mounted untuk mencegah hydration mismatch
+  if (!mounted || isAdminPath) return null;
 
   const links = [
     { name: 'Home', path: '/' },
@@ -50,9 +54,9 @@ const Navbar: React.FC = () => {
         {isAuth ? (
           <Link 
             href="/admin" 
-            className="hidden sm:flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-2xl text-xs font-black hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none uppercase tracking-widest"
+            className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-2xl text-xs font-black hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none uppercase tracking-widest"
           >
-            Console
+            Dashboard
           </Link>
         ) : (
           <Link 

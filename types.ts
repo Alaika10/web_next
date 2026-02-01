@@ -3,6 +3,8 @@ export interface Project {
   id: string;
   title: string;
   description: string;
+  content?: string;
+  contentHtml?: string;
   imageUrl: string;
   technologies: string[];
   link: string;
@@ -14,6 +16,7 @@ export interface BlogPost {
   title: string;
   excerpt: string;
   content: string;
+  contentHtml?: string;
   imageUrl: string;
   author: string;
   date: string;
@@ -22,7 +25,7 @@ export interface BlogPost {
 
 export interface Skill {
   name: string;
-  level: number; // 0-100
+  level: number;
   category: 'Frontend' | 'Backend' | 'Design' | 'Other';
 }
 
@@ -33,7 +36,6 @@ export interface Experience {
   description: string;
 }
 
-// Added optional id property to resolve "Property 'id' does not exist on type 'Profile'" in AdminDashboard.tsx
 export interface Profile {
   id?: string | number;
   name: string;

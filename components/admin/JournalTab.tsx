@@ -1,7 +1,8 @@
 
 'use client';
 import React from 'react';
-import { Trash2, Sparkles, FileText } from 'lucide-react';
+import { Trash2, Sparkles, FileText, Edit3, ExternalLink } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { BlogPost } from '../../types';
 
 interface JournalTabProps {
@@ -13,6 +14,8 @@ interface JournalTabProps {
 }
 
 export default function JournalTab({ blogs, isAiLoading, onUpdate, onDelete, onAiRefine }: JournalTabProps) {
+  const router = useRouter();
+
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
       {blogs.length === 0 && (
@@ -28,12 +31,12 @@ export default function JournalTab({ blogs, isAiLoading, onUpdate, onDelete, onA
               <div className="aspect-[16/10] rounded-2xl overflow-hidden border">
                 <img src={post.imageUrl || (post as any).image_url} className="w-full h-full object-cover" />
               </div>
-              <input 
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-lg text-[10px] outline-none"
-                defaultValue={post.imageUrl || (post as any).image_url}
-                onBlur={(e) => onUpdate(post.id, { imageUrl: e.target.value })}
-                placeholder="Image URL"
-              />
+              <button 
+                onClick={() => router.push(`/admin/blogs/${post.id}`)}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-slate-900 text-white dark:bg-white dark:text-slate-900 rounded-xl font-bold text-xs uppercase tracking-widest hover:opacity-80 transition-all"
+              >
+                <Edit3 size={14} /> Full Editor
+              </button>
             </div>
             <div className="flex-1 space-y-6">
               <div className="flex justify-between items-start gap-4">
@@ -65,13 +68,17 @@ export default function JournalTab({ blogs, isAiLoading, onUpdate, onDelete, onA
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Content (Markdown)</label>
-                <textarea 
-                  className="w-full h-48 bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border-none text-sm font-mono"
-                  defaultValue={post.content}
-                  onBlur={(e) => onUpdate(post.id, { content: e.target.value })}
-                />
+              <div className="p-4 bg-indigo-50 dark:bg-indigo-950/20 rounded-2xl flex items-center justify-between border border-indigo-100 dark:border-indigo-900/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white"><FileText size={16}/></div>
+                  <p className="text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase tracking-tighter">Status: {post.contentHtml ? 'Formatted' : 'Raw Content'}</p>
+                </div>
+                <button 
+                  onClick={() => router.push(`/admin/blogs/${post.id}`)}
+                  className="text-xs font-black text-indigo-600 flex items-center gap-1 hover:underline"
+                >
+                  Edit Body <ExternalLink size={12} />
+                </button>
               </div>
             </div>
           </div>
