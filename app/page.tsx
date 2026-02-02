@@ -5,7 +5,6 @@ import { supabase } from '../lib/supabase';
 import { INITIAL_PROFILE } from '../constants';
 import { Project, BlogPost, Profile } from '../types';
 
-// Revalidate page every 60 seconds (ISR)
 export const revalidate = 60;
 
 export default async function HomePage() {
@@ -14,30 +13,26 @@ export default async function HomePage() {
   let blogs: BlogPost[] = [];
 
   if (supabase) {
-    // 1. Fetch Profile
     const { data: p } = await supabase.from('profiles').select('*').maybeSingle();
     if (p) profile = p;
     
-    // 2. Fetch Latest Projects with correct mapping
     const { data: projs } = await supabase.from('projects').select('*').limit(2).order('created_at', { ascending: false });
     if (projs) {
       projects = projs.map((p: any) => ({
         ...p,
-        imageUrl: p.image_url // Sync snake_case to camelCase
+        imageUrl: p.image_url
       }));
     }
     
-    // 3. Fetch Latest Blogs with correct mapping
     const { data: b } = await supabase.from('blogs').select('*').limit(3).order('date', { ascending: false });
     if (b) {
       blogs = b.map((item: any) => ({
         ...item,
-        imageUrl: item.image_url // Sync snake_case to camelCase
+        imageUrl: item.image_url
       }));
     }
   }
 
-  // Fallback for UI text if name is not set
   const firstName = profile.name ? profile.name.split(' ')[0] : 'Alex';
 
   return (
@@ -71,7 +66,7 @@ export default async function HomePage() {
                 width={400} 
                 height={400} 
                 className="w-full h-full object-cover"
-                priority 
+                priority // Vital for LCP score
               />
             )}
           </div>
@@ -90,7 +85,7 @@ export default async function HomePage() {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-          {projects.length > 0 ? projects.map((project) => (
+          {projects.map((project) => (
             <div key={project.id} className="group bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800 hover:shadow-2xl transition-all duration-500">
               <div className="h-72 overflow-hidden relative bg-slate-100 dark:bg-slate-800">
                 {project.imageUrl && (
@@ -98,6 +93,7 @@ export default async function HomePage() {
                     src={project.imageUrl} 
                     alt={project.title} 
                     fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover transform group-hover:scale-105 transition-transform duration-700" 
                   />
                 )}
@@ -115,34 +111,7 @@ export default async function HomePage() {
                 <p className="text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">{project.description}</p>
               </div>
             </div>
-          )) : (
-            <div className="col-span-full py-20 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[3rem]">
-              <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No project deployments found in cloud.</p>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="bg-slate-900 rounded-[3rem] p-12 md:p-20 text-white relative overflow-hidden shadow-2xl shadow-indigo-100 dark:shadow-none">
-        <div className="absolute inset-0 bg-gradient-to-tr from-indigo-900 to-transparent opacity-50"></div>
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          <div className="space-y-6">
-            <h2 className="text-4xl md:text-5xl font-bold leading-tight">Engineering intelligence through data.</h2>
-            <p className="text-slate-300 text-lg opacity-90 leading-relaxed">
-              I specialize in end-to-end ML lifecycle management—from feature engineering to model deployment.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-             {profile.skills.slice(0, 4).map(skill => (
-               <div key={skill.name} className="p-6 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10">
-                 <p className="font-bold text-lg mb-2">{skill.name}</p>
-                 <div className="h-1.5 bg-indigo-500/30 rounded-full overflow-hidden">
-                   <div className="h-full bg-indigo-500" style={{ width: `${skill.level}%` }}></div>
-                 </div>
-               </div>
-             ))}
-          </div>
+          ))}
         </div>
       </section>
 
@@ -156,7 +125,7 @@ export default async function HomePage() {
           <Link href="/blog" className="text-indigo-600 font-bold hover:underline">Read Research →</Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {blogs.length > 0 ? blogs.map(post => (
+          {blogs.map(post => (
             <div key={post.id} className="group space-y-4">
               <div className="aspect-[16/10] rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 relative bg-slate-100 dark:bg-slate-800">
                 {post.imageUrl && (
@@ -164,6 +133,7 @@ export default async function HomePage() {
                     src={post.imageUrl} 
                     alt={post.title} 
                     fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-500" 
                   />
                 )}
@@ -176,11 +146,7 @@ export default async function HomePage() {
                 <p className="text-slate-500 text-sm line-clamp-2">{post.excerpt}</p>
               </div>
             </div>
-          )) : (
-            <div className="col-span-full py-20 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[3rem]">
-              <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Waiting for new research publications.</p>
-            </div>
-          )}
+          ))}
         </div>
       </section>
     </div>
