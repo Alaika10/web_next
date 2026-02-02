@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply min-h-screen flex flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50 transition-colors duration-300 antialiased;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  .glass-effect {
+    @apply bg-white/70 backdrop-blur-md border border-white/20;
+  }
+  .dark .glass-effect {
+    @apply bg-slate-900/70 border-white/10;
+  }
+
+  .data-grid-bg {
+    background-image: radial-gradient(#cbd5e1 0.5px, transparent 0.5px);
+    background-size: 24px 24px;
+  }
+  .dark .data-grid-bg {
+    background-image: radial-gradient(#1e293b 0.5px, transparent 0.5px);
+  }
+
+  .font-mono-tech {
+    @apply font-mono;
+  }
+
+  .animate-in {
+    @apply opacity-0 translate-y-5;
+    animation: animateIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  /* Custom Rich Text Styling */
+  .rich-text-content h1, 
+  .rich-text-content h2, 
+  .rich-text-content h3 {
+    @apply font-black tracking-tighter mt-10 mb-6 text-current;
+  }
+  
+  .rich-text-content p {
+    @apply mb-6 leading-relaxed;
+  }
+}
+
+@keyframes animateIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full transition-colors;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  @apply bg-slate-700;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-indigo-500;
+}
