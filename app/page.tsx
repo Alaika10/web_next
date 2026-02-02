@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
 import { INITIAL_PROFILE } from '../constants';
 import { Project, BlogPost, Profile } from '../types';
 
-export const revalidate = 60;
+export const revalidate = 3600; // Cache for 1 hour to improve Time to First Byte (TTFB)
 
 export default async function HomePage() {
   let profile: Profile = INITIAL_PROFILE;
@@ -13,20 +13,22 @@ export default async function HomePage() {
   let blogs: BlogPost[] = [];
 
   if (supabase) {
-    const { data: p } = await supabase.from('profiles').select('*').maybeSingle();
-    if (p) profile = p;
-    
-    const { data: projs } = await supabase.from('projects').select('*').limit(2).order('created_at', { ascending: false });
-    if (projs) {
-      projects = projs.map((p: any) => ({
+    // Parallel fetching for performance
+    const [profileRes, projectsRes, blogsRes] = await Promise.all([
+      supabase.from('profiles').select('*').maybeSingle(),
+      supabase.from('projects').select('*').limit(2).order('created_at', { ascending: false }),
+      supabase.from('blogs').select('*').limit(3).order('date', { ascending: false })
+    ]);
+
+    if (profileRes.data) profile = profileRes.data;
+    if (projectsRes.data) {
+      projects = projectsRes.data.map((p: any) => ({
         ...p,
         imageUrl: p.image_url
       }));
     }
-    
-    const { data: b } = await supabase.from('blogs').select('*').limit(3).order('date', { ascending: false });
-    if (b) {
-      blogs = b.map((item: any) => ({
+    if (blogsRes.data) {
+      blogs = blogsRes.data.map((item: any) => ({
         ...item,
         imageUrl: item.image_url
       }));
@@ -36,9 +38,9 @@ export default async function HomePage() {
   const firstName = profile.name ? profile.name.split(' ')[0] : 'Alex';
 
   return (
-    <div className="space-y-24 py-12 px-6 md:px-12 max-w-7xl mx-auto animate-in fade-in duration-700">
-      {/* Hero Section */}
-      <section className="flex flex-col md:flex-row items-center gap-12 pt-12">
+    <div className="space-y-24 py-12 px-6 md:px-12 max-w-7xl mx-auto">
+      {/* Hero Section - Optimized for LCP */}
+      <section className="flex flex-col md:flex-row items-center gap-12 pt-12 animate-in">
         <div className="flex-1 space-y-6">
           <span className="inline-block px-4 py-1.5 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 rounded-full text-sm font-semibold tracking-wide uppercase">Deploying Intelligence at Scale</span>
           <h1 className="text-5xl md:text-7xl font-bold leading-tight tracking-tighter">
@@ -66,7 +68,10 @@ export default async function HomePage() {
                 width={400} 
                 height={400} 
                 className="w-full h-full object-cover"
-                priority // Vital for LCP score
+                priority
+                fetchPriority="high"
+                loading="eager"
+                sizes="(max-width: 768px) 256px, 320px"
               />
             )}
           </div>
@@ -95,6 +100,7 @@ export default async function HomePage() {
                     fill
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover transform group-hover:scale-105 transition-transform duration-700" 
+                    quality={75}
                   />
                 )}
                 <div className="absolute inset-0 bg-indigo-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
@@ -135,6 +141,7 @@ export default async function HomePage() {
                     fill
                     sizes="(max-width: 768px) 100vw, 33vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-500" 
+                    quality={75}
                   />
                 )}
               </div>
