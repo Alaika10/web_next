@@ -19,34 +19,21 @@ const Navbar: React.FC = () => {
     setMounted(true);
     setIsAuth(isAuthenticated());
 
-    let lastScrollY = window.scrollY;
-    let ticking = false;
-
-    const updateNavbar = () => {
+    const handleScroll = () => {
       const currentScrollY = window.scrollY;
       setScrolled(currentScrollY > 20);
-
-      if (currentScrollY > lastScrollY && currentScrollY > 100 && !isMenuOpen) {
-        setIsVisible(false);
+      
+      // Auto-hide navbar on scroll down, show on scroll up
+      if (currentScrollY > 100 && !isMenuOpen) {
+        setIsVisible(currentScrollY < (window as any).lastScrollY);
       } else {
         setIsVisible(true);
       }
-      
-      lastScrollY = currentScrollY;
-      ticking = false;
+      (window as any).lastScrollY = currentScrollY;
     };
 
-    const onScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          updateNavbar();
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [isMenuOpen]);
 
   // Lock scroll when menu is open
@@ -75,32 +62,32 @@ const Navbar: React.FC = () => {
   return (
     <>
       <nav 
-        className={`fixed top-0 left-0 right-0 z-[110] transition-all duration-500 ease-in-out transform ${
+        className={`fixed top-0 left-0 right-0 z-[150] transition-all duration-500 transform ${
           isVisible ? 'translate-y-0' : '-translate-y-full'
         } ${
           scrolled || isMenuOpen
-          ? 'py-3 px-6 md:px-12 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 shadow-lg' 
-          : 'py-6 px-6 md:px-12 bg-transparent'
+          ? 'py-3 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50' 
+          : 'py-6 bg-transparent'
         }`}
       >
-        <div className="max-w-7xl mx-auto flex justify-between items-center h-14">
+        <div className="max-w-7xl mx-auto flex justify-between items-center px-6 md:px-12 h-14">
           {/* Brand Logo */}
-          <Link href="/" className="flex items-center gap-3 group relative z-[120]">
-            <div className="w-10 h-10 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-lg transition-transform group-hover:rotate-12 duration-300">
+          <Link href="/" className="flex items-center gap-3 group relative z-[160]">
+            <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg group-hover:rotate-12 transition-transform">
               D
             </div>
-            <span className="font-black text-xl tracking-tighter uppercase bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
+            <span className="font-black text-lg tracking-tighter uppercase dark:text-white">
               DataLab
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-2 bg-slate-100/50 dark:bg-white/5 backdrop-blur-md px-1.5 py-1.5 rounded-2xl border border-slate-200/30 dark:border-white/10">
+          <div className="hidden md:flex items-center gap-1 bg-slate-100/50 dark:bg-white/5 backdrop-blur-md p-1 rounded-xl border border-slate-200/30 dark:border-white/10">
             {links.map((link) => (
               <Link
                 key={link.path}
                 href={link.path}
-                className={`px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${
+                className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
                   pathname === link.path 
                   ? 'bg-white dark:bg-slate-800 text-indigo-600 shadow-sm' 
                   : 'text-slate-500 hover:text-indigo-600'
@@ -112,95 +99,85 @@ const Navbar: React.FC = () => {
           </div>
 
           {/* Action Area */}
-          <div className="flex items-center gap-3 relative z-[120]">
-            <div className="hidden sm:flex items-center gap-3">
-              {!mounted ? (
-                <div className="w-24 h-10 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-xl"></div>
-              ) : isAuth ? (
-                <Link 
-                  href="/admin" 
-                  className="group flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-[10px] font-black hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 dark:shadow-none uppercase tracking-[0.15em]"
-                >
-                  <LayoutDashboard size={14} className="group-hover:rotate-12 transition-transform" />
-                  <span>Console</span>
-                </Link>
-              ) : (
-                <Link 
-                  href="/login" 
-                  className="flex items-center gap-2 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-6 py-2.5 rounded-xl text-[10px] font-black hover:opacity-80 transition-all uppercase tracking-[0.15em]"
-                >
-                  <UserIcon size={14} />
-                  <span>Login</span>
-                </Link>
+          <div className="flex items-center gap-3 relative z-[160]">
+            <div className="hidden sm:flex">
+              {mounted && (
+                isAuth ? (
+                  <Link href="/admin" className="bg-indigo-600 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                    <LayoutDashboard size={14} /> Dash
+                  </Link>
+                ) : (
+                  <Link href="/login" className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest">
+                    Login
+                  </Link>
+                )
               )}
             </div>
 
             {/* Mobile Toggle Button */}
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-3 bg-slate-100 dark:bg-slate-800/50 rounded-xl text-slate-600 dark:text-slate-300 md:hidden transition-all hover:bg-indigo-50 dark:hover:bg-indigo-900/20 active:scale-90"
+              className="p-2.5 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-slate-900 dark:text-white md:hidden transition-transform active:scale-90"
               aria-label="Toggle Menu"
             >
-              {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
         </div>
       </nav>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Overlay - High Z-Index but below Nav Toggle */}
       <div 
-        className={`fixed inset-0 z-[105] md:hidden transition-all duration-500 ease-in-out ${
-          isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        className={`fixed inset-0 z-[140] md:hidden transition-all duration-500 ${
+          isMenuOpen ? 'opacity-100 pointer-events-auto visible' : 'opacity-0 pointer-events-none invisible'
         }`}
       >
-        {/* Backdrop blur effect */}
-        <div className="absolute inset-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl" onClick={() => setIsMenuOpen(false)}></div>
+        {/* Backdrop */}
+        <div className="absolute inset-0 bg-white/98 dark:bg-slate-950/98 backdrop-blur-3xl" onClick={() => setIsMenuOpen(false)}></div>
         
-        {/* Menu Content */}
-        <div className="relative h-full flex flex-col justify-center px-10 space-y-12">
-          <div className="space-y-2">
-            <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-indigo-500 font-black mb-4 animate-in slide-in-from-left-4 duration-500">Navigation_System</p>
-            <nav className="flex flex-col gap-6">
+        {/* Scrollable Content Container */}
+        <div className="relative h-full overflow-y-auto flex flex-col pt-32 pb-12 px-8">
+          <div className="space-y-1">
+            <p className="font-mono text-[9px] uppercase tracking-[0.4em] text-indigo-500 font-black mb-6 animate-in fade-in">System_Menu</p>
+            <nav className="flex flex-col gap-4">
               {links.map((link, idx) => (
                 <Link
                   key={link.path}
                   href={link.path}
-                  className={`flex items-center justify-between text-4xl font-black tracking-tighter transition-all duration-500 hover:translate-x-4 ${
-                    pathname === link.path ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  } animate-in slide-in-from-left-8 fill-mode-forwards`}
-                  style={{ animationDelay: `${idx * 100}ms` }}
+                  className={`flex items-center justify-between py-2 text-4xl font-black tracking-tighter ${
+                    pathname === link.path ? 'text-indigo-600' : 'text-slate-900 dark:text-slate-100'
+                  } animate-in slide-in-from-left-4`}
+                  style={{ animationDelay: `${idx * 75}ms` }}
                 >
                   {link.name}
-                  <ChevronRight size={32} className={`transition-opacity ${pathname === link.path ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
+                  <ChevronRight size={28} className={pathname === link.path ? 'opacity-100' : 'opacity-20'} />
                 </Link>
               ))}
             </nav>
           </div>
 
-          <div className="pt-12 border-t border-slate-100 dark:border-slate-800 space-y-8 animate-in slide-in-from-bottom-8 duration-700 delay-300">
+          <div className="mt-12 pt-10 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 gap-4 animate-in slide-in-from-bottom-8">
             <div className="grid grid-cols-2 gap-4">
-              {!isAuth ? (
-                <Link href="/login" className="flex flex-col gap-2 p-6 bg-slate-50 dark:bg-slate-900 rounded-[2rem] group">
-                  <UserIcon className="text-indigo-600 group-hover:scale-110 transition-transform" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Researcher</span>
-                  <p className="font-bold text-sm">Secure Login</p>
-                </Link>
-              ) : (
-                <Link href="/admin" className="flex flex-col gap-2 p-6 bg-indigo-50 dark:bg-indigo-900/20 rounded-[2rem] group border border-indigo-100 dark:border-indigo-800">
-                  <LayoutDashboard className="text-indigo-600 group-hover:rotate-12 transition-transform" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500">Authorized</span>
-                  <p className="font-bold text-sm">Dashboard</p>
-                </Link>
+              {mounted && (
+                isAuth ? (
+                  <Link href="/admin" className="p-6 bg-indigo-50 dark:bg-indigo-900/20 rounded-[2rem] border border-indigo-100 dark:border-indigo-800">
+                    <LayoutDashboard className="text-indigo-600 mb-2" size={24} />
+                    <p className="font-black text-sm dark:text-white">Admin Console</p>
+                  </Link>
+                ) : (
+                  <Link href="/login" className="p-6 bg-slate-50 dark:bg-slate-900 rounded-[2rem]">
+                    <UserIcon className="text-slate-400 mb-2" size={24} />
+                    <p className="font-black text-sm dark:text-white">Login</p>
+                  </Link>
+                )
               )}
-              <Link href="https://github.com" className="flex flex-col gap-2 p-6 bg-slate-50 dark:bg-slate-900 rounded-[2rem] group">
-                <Globe className="text-slate-400 group-hover:text-indigo-600 transition-colors" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Repositories</span>
-                <p className="font-bold text-sm">GitHub Lab</p>
+              <Link href="https://github.com" className="p-6 bg-slate-50 dark:bg-slate-900 rounded-[2rem]">
+                <Globe className="text-slate-400 mb-2" size={24} />
+                <p className="font-black text-sm dark:text-white">GitHub</p>
               </Link>
             </div>
-            
-            <p className="text-[10px] text-center font-bold text-slate-400 uppercase tracking-widest">
-              © {new Date().getFullYear()} Alex Sterling — Vol. 25
+            <p className="text-[10px] text-center font-bold text-slate-400 uppercase tracking-widest mt-8">
+              DataLab Studio © {new Date().getFullYear()}
             </p>
           </div>
         </div>

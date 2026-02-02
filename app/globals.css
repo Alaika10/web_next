@@ -17,7 +17,7 @@
     @apply bg-slate-900/70 border-white/10;
   }
 
-  /* Optimized Grid Background with fixed attachment to prevent re-paints */
+  /* Optimized Grid Background */
   .data-grid-bg {
     background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
     background-size: 32px 32px;
@@ -33,9 +33,17 @@
     @apply font-mono;
   }
 
+  /* Core Animation Engine */
   .animate-in {
-    animation: simpleFadeIn 0.5s ease-out forwards;
+    animation-duration: 500ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    animation-fill-mode: forwards;
   }
+
+  .slide-in-from-left-4 { animation-name: slideInLeft4; }
+  .slide-in-from-left-8 { animation-name: slideInLeft8; }
+  .slide-in-from-bottom-8 { animation-name: slideInBottom8; }
+  .fade-in { animation-name: fadeInOnly; }
 
   /* Custom Rich Text Styling */
   .rich-text-content h1, 
@@ -47,6 +55,26 @@
   .rich-text-content p {
     @apply mb-6 leading-relaxed;
   }
+}
+
+@keyframes slideInLeft4 {
+  from { opacity: 0; transform: translateX(-1rem); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInLeft8 {
+  from { opacity: 0; transform: translateX(-2rem); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInBottom8 {
+  from { opacity: 0; transform: translateY(2rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInOnly {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes simpleFadeIn {
