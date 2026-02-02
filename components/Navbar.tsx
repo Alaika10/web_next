@@ -63,7 +63,7 @@ const Navbar: React.FC = () => {
           isVisible ? 'translate-y-0' : '-translate-y-full'
         } ${
           scrolled || isMenuOpen
-          ? 'py-3 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 shadow-sm' 
+          ? 'py-3 bg-white/95 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200/60 dark:border-indigo-500/10 shadow-sm' 
           : 'py-6 bg-transparent'
         }`}
       >
@@ -72,20 +72,21 @@ const Navbar: React.FC = () => {
             <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg group-hover:rotate-6 transition-transform">
               D
             </div>
-            <span className="font-black text-lg tracking-tighter uppercase dark:text-white">
+            <span className="font-black text-lg tracking-tighter uppercase text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
               DataLab
             </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-1 bg-slate-100/50 dark:bg-white/5 backdrop-blur-md p-1 rounded-xl border border-slate-200/30 dark:border-white/10">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-1 bg-slate-100/50 dark:bg-slate-900/50 backdrop-blur-md p-1.5 rounded-2xl border border-slate-200/30 dark:border-white/5">
             {links.map((link) => (
               <Link
                 key={link.path}
                 href={link.path}
-                className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
                   pathname === link.path 
-                  ? 'bg-white dark:bg-slate-800 text-indigo-600 shadow-sm' 
-                  : 'text-slate-500 hover:text-indigo-600'
+                  ? 'bg-white dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 shadow-sm border border-slate-200/50 dark:border-indigo-500/30' 
+                  : 'text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400'
                 }`}
               >
                 {link.name}
@@ -97,11 +98,11 @@ const Navbar: React.FC = () => {
             <div className="hidden sm:flex">
               {mounted && (
                 isAuth ? (
-                  <Link href="/admin" className="bg-indigo-600 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-indigo-700 transition-colors active:scale-95">
+                  <Link href="/admin" className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-indigo-700 transition-colors active:scale-95 shadow-md shadow-indigo-500/20">
                     <LayoutDashboard size={14} /> Dash
                   </Link>
                 ) : (
-                  <Link href="/login" className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:opacity-80 active:scale-95 transition-all">
+                  <Link href="/login" className="bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-md">
                     Login
                   </Link>
                 )
@@ -110,10 +111,10 @@ const Navbar: React.FC = () => {
 
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2.5 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-slate-900 dark:text-white md:hidden transition-all hover:bg-indigo-50 dark:hover:bg-indigo-900/30 active:scale-90"
+              className="p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-900 dark:text-white md:hidden transition-all hover:bg-indigo-50 dark:hover:bg-slate-700 active:scale-90 border border-transparent dark:border-white/5"
               aria-label="Toggle Menu"
             >
-              {isMenuOpen ? <X size={22} className="rotate-0 transition-transform duration-300" /> : <Menu size={22} className="rotate-0 transition-transform duration-300" />}
+              {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
         </div>
@@ -125,37 +126,39 @@ const Navbar: React.FC = () => {
           isMenuOpen ? 'visible pointer-events-auto' : 'invisible pointer-events-none'
         }`}
       >
-        {/* Backdrop with fade-in blur */}
+        {/* Backdrop */}
         <div 
-          className={`absolute inset-0 bg-white/95 dark:bg-slate-950/98 backdrop-blur-2xl transition-opacity duration-500 ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`} 
+          className={`absolute inset-0 bg-white/98 dark:bg-slate-950 transition-opacity duration-500 ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`} 
           onClick={() => setIsMenuOpen(false)}
         ></div>
         
         {/* Animated Container */}
-        <div className={`relative h-full flex flex-col pt-32 pb-12 px-10 ${isMenuOpen ? 'animate-premium-in' : ''}`}>
+        <div className={`relative h-full flex flex-col pt-32 pb-12 px-10 overflow-y-auto ${isMenuOpen ? 'animate-premium-in' : ''}`}>
           <div className="flex-1 space-y-2">
-            <p className="font-mono text-[9px] uppercase tracking-[0.4em] text-indigo-500 font-black mb-6 opacity-60">
+            <p className="font-mono text-[9px] uppercase tracking-[0.4em] text-indigo-500 dark:text-indigo-400 font-black mb-8 opacity-80">
               Lab_System_Index
             </p>
-            <nav className="flex flex-col gap-6">
+            <nav className="flex flex-col gap-4">
               {links.map((link, idx) => (
                 <Link
                   key={link.path}
                   href={link.path}
-                  className={`flex items-center justify-between py-1 group ${
+                  className={`flex items-center justify-between py-2 group ${
                     isMenuOpen ? 'nav-item-stagger' : 'opacity-0'
                   }`}
                   style={{ animationDelay: `${150 + (idx * 60)}ms` }}
                 >
                   <span className={`text-5xl font-black tracking-tighter transition-all duration-300 group-active:scale-95 ${
-                    pathname === link.path ? 'text-indigo-600' : 'text-slate-900 dark:text-slate-100'
+                    pathname === link.path 
+                    ? 'text-indigo-600 dark:text-indigo-400' 
+                    : 'text-slate-900 dark:text-slate-100'
                   }`}>
                     {link.name}
                   </span>
-                  <div className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all duration-500 ${
+                  <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center transition-all duration-500 ${
                     pathname === link.path 
-                    ? 'border-indigo-600 bg-indigo-600 text-white' 
-                    : 'border-slate-200 dark:border-slate-800 text-slate-400 group-hover:border-indigo-600 group-hover:text-indigo-600'
+                    ? 'border-indigo-600 bg-indigo-600 text-white dark:border-indigo-500/50 dark:bg-indigo-500/20 dark:text-indigo-300' 
+                    : 'border-slate-200 dark:border-slate-800 text-slate-400 group-hover:border-indigo-600 dark:group-hover:border-indigo-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'
                   }`}>
                     <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                   </div>
@@ -164,34 +167,35 @@ const Navbar: React.FC = () => {
             </nav>
           </div>
 
-          <div className={`mt-auto space-y-8 ${isMenuOpen ? 'nav-item-stagger' : 'opacity-0'}`} style={{ animationDelay: '450ms' }}>
+          <div className={`mt-12 space-y-8 ${isMenuOpen ? 'nav-item-stagger' : 'opacity-0'}`} style={{ animationDelay: '450ms' }}>
             <div className="grid grid-cols-2 gap-4">
               {mounted && (
                 isAuth ? (
-                  <Link href="/admin" className="p-6 bg-indigo-50 dark:bg-indigo-900/20 rounded-[2rem] border border-indigo-100 dark:border-indigo-800 active:scale-95 transition-transform">
-                    <LayoutDashboard className="text-indigo-600 mb-2" size={24} />
-                    <p className="font-black text-xs uppercase tracking-widest dark:text-white">Admin Console</p>
+                  <Link href="/admin" className="p-6 bg-indigo-50 dark:bg-slate-900 rounded-[2rem] border border-indigo-100 dark:border-slate-800 active:scale-95 transition-transform group">
+                    <LayoutDashboard className="text-indigo-600 dark:text-indigo-400 mb-2 group-hover:scale-110 transition-transform" size={24} />
+                    <p className="font-black text-xs uppercase tracking-widest text-slate-900 dark:text-slate-200">Admin Console</p>
                   </Link>
                 ) : (
-                  <Link href="/login" className="p-6 bg-slate-50 dark:bg-slate-900 rounded-[2rem] active:scale-95 transition-transform">
-                    <UserIcon className="text-slate-400 mb-2" size={24} />
-                    <p className="font-black text-xs uppercase tracking-widest dark:text-white">Researcher Login</p>
+                  <Link href="/login" className="p-6 bg-slate-50 dark:bg-slate-900 rounded-[2rem] border border-transparent dark:border-slate-800 active:scale-95 transition-transform group">
+                    <UserIcon className="text-slate-400 dark:text-slate-500 mb-2 group-hover:scale-110 transition-transform" size={24} />
+                    <p className="font-black text-xs uppercase tracking-widest text-slate-900 dark:text-slate-200">Researcher Login</p>
                   </Link>
                 )
               )}
-              <Link href="https://github.com" className="p-6 bg-slate-50 dark:bg-slate-900 rounded-[2rem] active:scale-95 transition-transform">
-                <Globe className="text-slate-400 mb-2" size={24} />
-                <p className="font-black text-xs uppercase tracking-widest dark:text-white">Open Source</p>
+              <Link href="https://github.com" className="p-6 bg-slate-50 dark:bg-slate-900 rounded-[2rem] border border-transparent dark:border-slate-800 active:scale-95 transition-transform group">
+                <Globe className="text-slate-400 dark:text-slate-500 mb-2 group-hover:scale-110 transition-transform" size={24} />
+                <p className="font-black text-xs uppercase tracking-widest text-slate-900 dark:text-slate-200">Open Source</p>
               </Link>
             </div>
-            <div className="flex justify-between items-center px-2">
+            
+            <div className="flex justify-between items-center px-2 pt-4 border-t border-slate-100 dark:border-slate-800">
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                Alex Sterling / Vol. 25
+                Alex Sterling / Lab.v25
               </p>
-              <div className="flex gap-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse"></div>
-                <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse delay-75"></div>
-                <div className="w-1.5 h-1.5 rounded-full bg-indigo-200 animate-pulse delay-150"></div>
+              <div className="flex gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400 animate-pulse"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 dark:bg-indigo-600 animate-pulse delay-75"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-indigo-200 dark:bg-indigo-800 animate-pulse delay-150"></div>
               </div>
             </div>
           </div>
