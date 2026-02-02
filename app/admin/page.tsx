@@ -61,64 +61,90 @@ export default function AdminPage() {
   }, [router]);
 
   const addProject = async () => {
-    if (!supabase) return;
-    setIsSaving(true);
-    const { data, error } = await supabase.from('projects').insert([{
-      title: "Untitled Project",
-      description: "Brief summary of the project.",
-      image_url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=800",
-      technologies: ["React"],
-      link: "#",
-      content: ""
-    }]).select('id').single();
-
-    if (data && !error) {
-      router.push(`/admin/projects/${data.id}`);
+    if (!supabase) {
+      alert("Database connection is not configured.");
+      return;
     }
-    setIsSaving(false);
+    setIsSaving(true);
+    try {
+      const { data, error } = await supabase.from('projects').insert([{
+        title: "Untitled Project",
+        description: "Brief summary of the project.",
+        image_url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=800",
+        technologies: ["React"],
+        link: "#",
+        content: ""
+      }]).select('id').single();
+
+      if (error) throw error;
+      if (data) {
+        router.push(`/admin/projects/${data.id}`);
+      }
+    } catch (err) {
+      console.error("Add project error:", err);
+      alert("Error: Cloud system failed to initialize project node.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const addBlog = async () => {
-    if (!supabase) return;
-    setIsSaving(true);
-    const { data, error } = await supabase.from('blogs').insert([{
-      title: "New Journal Entry",
-      excerpt: "Short summary for the list view...",
-      content: "",
-      image_url: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=800",
-      author: profile.name,
-      date: new Date().toISOString().split('T')[0],
-      tags: ["General"],
-      isHeadline: false,
-      isTrending: false
-    }]).select('id').single();
-
-    if (data && !error) {
-      router.push(`/admin/blogs/${data.id}`);
+    if (!supabase) {
+      alert("Database connection is not configured.");
+      return;
     }
-    setIsSaving(false);
+    setIsSaving(true);
+    try {
+      const { data, error } = await supabase.from('blogs').insert([{
+        title: "New Journal Entry",
+        excerpt: "Short summary for the list view...",
+        content: "",
+        image_url: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=800",
+        author: profile.name || "Alex Sterling",
+        date: new Date().toISOString().split('T')[0],
+        tags: ["General"],
+        is_headline: false, // Corrected to snake_case
+        is_trending: false  // Corrected to snake_case
+      }]).select('id').single();
+
+      if (error) throw error;
+      if (data) {
+        router.push(`/admin/blogs/${data.id}`);
+      }
+    } catch (err) {
+      console.error("Add blog error:", err);
+      alert("Error: Could not commit new journal entry to the database.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const deleteItem = async (table: string, id: string) => {
     if (!supabase || !confirm("Permanent delete? This cannot be undone.")) return;
     setIsSaving(true);
-    await supabase.from(table).delete().eq('id', id);
-    if (table === 'projects') setProjects(projects.filter(p => p.id !== id));
-    else setBlogs(blogs.filter(b => b.id !== id));
-    setIsSaving(false);
+    try {
+      await supabase.from(table).delete().eq('id', id);
+      if (table === 'projects') setProjects(projects.filter(p => p.id !== id));
+      else setBlogs(blogs.filter(b => b.id !== id));
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const updateItem = async (table: string, id: string, updates: any) => {
     if (!supabase) return;
     setIsSaving(true);
-    const dbUpdates = { ...updates };
-    // Map cammelCase to snake_case if necessary
-    if (updates.imageUrl) { dbUpdates.image_url = updates.imageUrl; delete dbUpdates.imageUrl; }
-    if (updates.isHeadline !== undefined) { dbUpdates.is_headline = updates.isHeadline; delete dbUpdates.isHeadline; }
-    if (updates.isTrending !== undefined) { dbUpdates.is_trending = updates.isTrending; delete dbUpdates.isTrending; }
-    
-    await supabase.from(table).update(dbUpdates).eq('id', id);
-    setIsSaving(false);
+    try {
+      const dbUpdates = { ...updates };
+      // Map cammelCase to snake_case
+      if (updates.imageUrl) { dbUpdates.image_url = updates.imageUrl; delete dbUpdates.imageUrl; }
+      if (updates.isHeadline !== undefined) { dbUpdates.is_headline = updates.isHeadline; delete dbUpdates.isHeadline; }
+      if (updates.isTrending !== undefined) { dbUpdates.is_trending = updates.isTrending; delete dbUpdates.isTrending; }
+      
+      await supabase.from(table).update(dbUpdates).eq('id', id);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const toggleBlogFeature = async (id: string, type: 'isHeadline' | 'isTrending') => {
@@ -132,17 +158,23 @@ export default function AdminPage() {
 
     try {
       if (type === 'isHeadline' && newValue === true) {
-        // Hanya boleh ada 1 headline. Reset yang lain.
+        // Hanya boleh ada 1 headline. Reset yang lain di database.
         await supabase.from('blogs').update({ is_headline: false }).neq('id', id);
-        setBlogs(prev => prev.map(b => ({ ...b, isHeadline: b.id === id })));
       }
 
       const field = type === 'isHeadline' ? 'is_headline' : 'is_trending';
-      await supabase.from('blogs').update({ [field]: newValue }).eq('id', id);
+      const { error } = await supabase.from('blogs').update({ [field]: newValue }).eq('id', id);
       
-      setBlogs(prev => prev.map(b => 
-        b.id === id ? { ...b, [type]: newValue } : b
-      ));
+      if (error) throw error;
+
+      // Update local state
+      setBlogs(prev => prev.map(b => {
+        if (type === 'isHeadline') {
+           return b.id === id ? { ...b, [type]: newValue } : { ...b, [type]: false };
+        }
+        return b.id === id ? { ...b, [type]: newValue } : b;
+      }));
+
     } catch (err) {
       console.error("Toggle error:", err);
     } finally {
@@ -175,6 +207,7 @@ export default function AdminPage() {
       setSaveStatus('success');
       setTimeout(() => setSaveStatus('idle'), 3000);
     } catch (err) {
+      console.error("Profile save error:", err);
       setSaveStatus('error');
     } finally {
       setIsSaving(false);
