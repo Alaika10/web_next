@@ -1,7 +1,6 @@
-
 'use client';
 import React from 'react';
-import { Trash2, Sparkles, FileText, Edit3, ExternalLink } from 'lucide-react';
+import { Trash2, Sparkles, FileText, Edit3, ExternalLink, Zap, Star } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { BlogPost } from '../../types';
 
@@ -11,9 +10,10 @@ interface JournalTabProps {
   onUpdate: (id: string, updates: any) => void;
   onDelete: (id: string) => void;
   onAiRefine: (id: string, topic: string) => void;
+  onToggleFeature?: (id: string, type: 'isHeadline' | 'isTrending') => void;
 }
 
-export default function JournalTab({ blogs, isAiLoading, onUpdate, onDelete, onAiRefine }: JournalTabProps) {
+export default function JournalTab({ blogs, isAiLoading, onUpdate, onDelete, onAiRefine, onToggleFeature }: JournalTabProps) {
   const router = useRouter();
 
   return (
@@ -25,11 +25,21 @@ export default function JournalTab({ blogs, isAiLoading, onUpdate, onDelete, onA
         </div>
       )}
       {blogs.map((post) => (
-        <div key={post.id} className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm p-8 space-y-6">
+        <div key={post.id} className={`bg-white dark:bg-slate-900 rounded-[2.5rem] border overflow-hidden shadow-sm p-8 space-y-6 transition-all duration-500 ${post.isHeadline ? 'border-indigo-500 ring-4 ring-indigo-500/10' : 'border-slate-200 dark:border-slate-800'}`}>
           <div className="flex flex-col md:flex-row gap-8">
             <div className="w-full md:w-64 space-y-4">
-              <div className="aspect-[16/10] rounded-2xl overflow-hidden border">
+              <div className="aspect-[16/10] rounded-2xl overflow-hidden border relative">
                 <img src={post.imageUrl || (post as any).image_url} className="w-full h-full object-cover" />
+                {post.isHeadline && (
+                  <div className="absolute top-3 left-3 px-3 py-1 bg-indigo-600 text-white font-mono-tech text-[8px] uppercase tracking-widest rounded-full shadow-lg flex items-center gap-2">
+                    <Star size={10} fill="white" /> Headline
+                  </div>
+                )}
+                {post.isTrending && (
+                  <div className="absolute bottom-3 left-3 px-3 py-1 bg-amber-500 text-white font-mono-tech text-[8px] uppercase tracking-widest rounded-full shadow-lg flex items-center gap-2">
+                    <Zap size={10} fill="white" /> Trending
+                  </div>
+                )}
               </div>
               <button 
                 onClick={() => router.push(`/admin/blogs/${post.id}`)}
@@ -40,14 +50,32 @@ export default function JournalTab({ blogs, isAiLoading, onUpdate, onDelete, onA
             </div>
             <div className="flex-1 space-y-6">
               <div className="flex justify-between items-start gap-4">
-                <input 
-                  className="text-2xl font-black bg-transparent border-none focus:ring-0 w-full p-0"
-                  defaultValue={post.title}
-                  onBlur={(e) => onUpdate(post.id, { title: e.target.value })}
-                />
-                <button onClick={() => onDelete(post.id)} className="p-2 text-slate-300 hover:text-red-500 transition-colors">
-                  <Trash2 size={20} />
-                </button>
+                <div className="flex-1">
+                  <input 
+                    className="text-2xl font-black bg-transparent border-none focus:ring-0 w-full p-0"
+                    defaultValue={post.title}
+                    onBlur={(e) => onUpdate(post.id, { title: e.target.value })}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => onToggleFeature?.(post.id, 'isHeadline')}
+                    title="Toggle Headline"
+                    className={`p-2 rounded-xl border transition-all ${post.isHeadline ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-400 border-transparent hover:border-indigo-500'}`}
+                  >
+                    <Star size={20} fill={post.isHeadline ? "white" : "none"} />
+                  </button>
+                  <button 
+                    onClick={() => onToggleFeature?.(post.id, 'isTrending')}
+                    title="Toggle Trending"
+                    className={`p-2 rounded-xl border transition-all ${post.isTrending ? 'bg-amber-500 text-white border-amber-500' : 'bg-slate-50 dark:bg-slate-800 text-slate-400 border-transparent hover:border-amber-500'}`}
+                  >
+                    <Zap size={20} fill={post.isTrending ? "white" : "none"} />
+                  </button>
+                  <button onClick={() => onDelete(post.id)} className="p-2 text-slate-300 hover:text-red-500 transition-colors">
+                    <Trash2 size={20} />
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-2">

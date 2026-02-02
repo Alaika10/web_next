@@ -1,4 +1,3 @@
-
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -44,7 +43,6 @@ export default function AdminPage() {
       }
       try {
         const { data: p, error } = await supabase.from('profiles').select('*').maybeSingle();
-        // maybeSingle() tidak akan melempar error jika data kosong (PGRST116)
         if (p) setProfile(p);
         
         const { data: projs } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
@@ -90,7 +88,9 @@ export default function AdminPage() {
       image_url: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=800",
       author: profile.name,
       date: new Date().toISOString().split('T')[0],
-      tags: ["General"]
+      tags: ["General"],
+      isHeadline: false,
+      isTrending: false
     }]).select('id').single();
 
     if (data && !error) {
@@ -112,9 +112,42 @@ export default function AdminPage() {
     if (!supabase) return;
     setIsSaving(true);
     const dbUpdates = { ...updates };
+    // Map cammelCase to snake_case if necessary
     if (updates.imageUrl) { dbUpdates.image_url = updates.imageUrl; delete dbUpdates.imageUrl; }
+    if (updates.isHeadline !== undefined) { dbUpdates.is_headline = updates.isHeadline; delete dbUpdates.isHeadline; }
+    if (updates.isTrending !== undefined) { dbUpdates.is_trending = updates.isTrending; delete dbUpdates.isTrending; }
+    
     await supabase.from(table).update(dbUpdates).eq('id', id);
     setIsSaving(false);
+  };
+
+  const toggleBlogFeature = async (id: string, type: 'isHeadline' | 'isTrending') => {
+    if (!supabase) return;
+    setIsSaving(true);
+    
+    const blog = blogs.find(b => b.id === id);
+    if (!blog) return;
+
+    const newValue = !((blog as any)[type]);
+
+    try {
+      if (type === 'isHeadline' && newValue === true) {
+        // Hanya boleh ada 1 headline. Reset yang lain.
+        await supabase.from('blogs').update({ is_headline: false }).neq('id', id);
+        setBlogs(prev => prev.map(b => ({ ...b, isHeadline: b.id === id })));
+      }
+
+      const field = type === 'isHeadline' ? 'is_headline' : 'is_trending';
+      await supabase.from('blogs').update({ [field]: newValue }).eq('id', id);
+      
+      setBlogs(prev => prev.map(b => 
+        b.id === id ? { ...b, [type]: newValue } : b
+      ));
+    } catch (err) {
+      console.error("Toggle error:", err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const saveProfile = async () => {
@@ -123,30 +156,25 @@ export default function AdminPage() {
     setSaveStatus('idle');
     
     try {
-      // Pastikan payload bersih dan sesuai dengan skema DB
       const payload = {
-        id: profile.id || 1, // Gunakan ID 1 sebagai default untuk single-profile portfolio
+        id: profile.id || 1,
         name: profile.name,
         title: profile.title,
         about: profile.about,
         avatar: profile.avatar,
-        skills: profile.skills, // Simpan sebagai JSONB
-        experience: profile.experience, // Simpan sebagai JSONB
-        socials: profile.socials, // Simpan sebagai JSONB
+        skills: profile.skills,
+        experience: profile.experience,
+        socials: profile.socials,
         updated_at: new Date().toISOString()
       };
 
       const { error } = await supabase.from('profiles').upsert(payload, { onConflict: 'id' });
 
-      if (error) {
-        console.error("Supabase Upsert Error:", error);
-        throw error;
-      }
+      if (error) throw error;
       
       setSaveStatus('success');
       setTimeout(() => setSaveStatus('idle'), 3000);
     } catch (err) {
-      console.error("Full Save Error Context:", err);
       setSaveStatus('error');
     } finally {
       setIsSaving(false);
@@ -242,6 +270,7 @@ export default function AdminPage() {
             onUpdate={(id, up) => updateItem('blogs', id, up)} 
             onDelete={(id) => deleteItem('blogs', id)} 
             onAiRefine={aiRefineBlog}
+            onToggleFeature={toggleBlogFeature}
           />
         )}
         {activeTab === DashboardTab.PROFILE && (

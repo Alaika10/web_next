@@ -1,4 +1,3 @@
-
 export interface Project {
   id: string;
   title: string;
@@ -21,6 +20,8 @@ export interface BlogPost {
   author: string;
   date: string;
   tags: string[];
+  isHeadline?: boolean;
+  isTrending?: boolean;
 }
 
 export interface Skill {
