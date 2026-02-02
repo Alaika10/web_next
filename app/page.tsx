@@ -1,10 +1,10 @@
-
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Profile, Project, BlogPost } from '../types';
 import { supabase } from '../lib/supabase';
 import { INITIAL_PROFILE, INITIAL_PROJECTS, INITIAL_BLOGS } from '../constants';
+import Skeleton from '../components/Skeleton';
 
 export default function HomePage() {
   const [profile, setProfile] = useState<Profile>(INITIAL_PROFILE);
@@ -32,9 +32,7 @@ export default function HomePage() {
     loadData();
   }, []);
 
-  if (loading) return <div className="h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-    <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-  </div>;
+  if (loading) return <HomeSkeleton />;
 
   return (
     <div className="space-y-24 py-12 px-6 md:px-12 max-w-7xl mx-auto animate-in fade-in duration-700">
@@ -42,11 +40,11 @@ export default function HomePage() {
       <section className="flex flex-col md:flex-row items-center gap-12 pt-12">
         <div className="flex-1 space-y-6">
           <span className="inline-block px-4 py-1.5 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 rounded-full text-sm font-semibold tracking-wide uppercase">Deploying Intelligence at Scale</span>
-          <h1 className="text-5xl md:text-7xl font-bold leading-tight">
+          <h1 className="text-5xl md:text-7xl font-bold leading-tight tracking-tighter">
             DataLab <span className="text-slate-400">by Alex.</span> <br/>
             <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Machine Learning Architect</span>
           </h1>
-          <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
+          <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
             Specialized in turning high-dimensional data into predictive power. I build end-to-end ML pipelines that solve real-world complexities.
           </p>
           <div className="flex flex-wrap gap-4 pt-4">
@@ -144,6 +142,70 @@ export default function HomePage() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function HomeSkeleton() {
+  return (
+    <div className="space-y-24 py-12 px-6 md:px-12 max-w-7xl mx-auto">
+      {/* Hero Skeleton */}
+      <section className="flex flex-col md:flex-row items-center gap-12 pt-12">
+        <div className="flex-1 space-y-8">
+          <Skeleton className="h-6 w-48 rounded-full" />
+          <div className="space-y-4">
+            <Skeleton className="h-16 md:h-24 w-full" />
+            <Skeleton className="h-16 md:h-24 w-4/5" />
+          </div>
+          <Skeleton className="h-20 w-3/4" />
+          <div className="flex gap-4">
+            <Skeleton className="h-14 w-40 rounded-2xl" />
+            <Skeleton className="h-14 w-40 rounded-2xl" />
+          </div>
+        </div>
+        <Skeleton className="w-64 h-64 md:w-80 md:h-80 rounded-[3rem] rotate-3" />
+      </section>
+
+      {/* Projects Skeleton */}
+      <section className="space-y-12">
+        <div className="flex justify-between items-end">
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-64" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+          <Skeleton className="h-6 w-32" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          {[1, 2].map(i => (
+            <div key={i} className="space-y-6">
+              <Skeleton className="h-72 w-full rounded-3xl" />
+              <div className="space-y-4">
+                <div className="flex gap-2">
+                  <Skeleton className="h-5 w-16 rounded-lg" />
+                  <Skeleton className="h-5 w-16 rounded-lg" />
+                </div>
+                <Skeleton className="h-8 w-3/4" />
+                <Skeleton className="h-12 w-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Stats Skeleton */}
+      <section className="h-96 w-full rounded-[3rem] bg-slate-200 dark:bg-slate-800 animate-pulse flex items-center p-12 md:p-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 w-full">
+           <div className="space-y-6">
+             <Skeleton className="h-12 w-full bg-slate-300 dark:bg-slate-700" />
+             <Skeleton className="h-20 w-3/4 bg-slate-300 dark:bg-slate-700" />
+           </div>
+           <div className="grid grid-cols-2 gap-4">
+             {[1,2,3,4].map(i => (
+               <Skeleton key={i} className="h-24 w-full bg-slate-300 dark:bg-slate-700 rounded-2xl" />
+             ))}
+           </div>
         </div>
       </section>
     </div>
