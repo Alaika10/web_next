@@ -21,17 +21,25 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 
   if (!post) return { title: 'Article Not Found' };
 
-  const imageUrl = post.image_url || '/og-main.png';
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://datalab.alex.studio';
+  // Pastikan URL gambar absolut
+  const imageUrl = post.image_url?.startsWith('http') 
+    ? post.image_url 
+    : `${siteUrl}${post.image_url || '/og-main.png'}`;
+  
+  const fullUrl = `${siteUrl}/blog/${id}`;
 
   return {
     title: post.title,
     description: post.excerpt,
+    alternates: {
+      canonical: fullUrl,
+    },
     openGraph: {
       title: post.title,
       description: post.excerpt,
       type: 'article',
-      url: `${siteUrl}/blog/${id}`,
+      url: fullUrl,
       images: [
         {
           url: imageUrl,
@@ -67,6 +75,9 @@ export default async function BlogDetailPage({ params }: { params: { id: string 
     ...post,
     imageUrl: post.image_url
   };
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://datalab.alex.studio';
+  const fullUrl = `${siteUrl}/blog/${id}`;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 selection:bg-indigo-100 selection:text-indigo-900">
@@ -115,7 +126,7 @@ export default async function BlogDetailPage({ params }: { params: { id: string 
           
           <div className="pt-16 border-t border-slate-100 dark:border-slate-800 space-y-10">
             <div className="bg-slate-50 dark:bg-slate-800/50 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800">
-              <SocialShare title={blogPost.title} />
+              <SocialShare title={blogPost.title} url={fullUrl} />
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-8">

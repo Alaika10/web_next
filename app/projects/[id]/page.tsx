@@ -23,16 +23,23 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 
   if (!project) return { title: 'Project Not Found' };
 
-  const imageUrl = project.image_url || '/og-main.png';
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://datalab.alex.studio';
+  const imageUrl = project.image_url?.startsWith('http') 
+    ? project.image_url 
+    : `${siteUrl}${project.image_url || '/og-main.png'}`;
+    
+  const fullUrl = `${siteUrl}/projects/${id}`;
 
   return {
     title: project.title,
     description: project.description,
+    alternates: {
+      canonical: fullUrl,
+    },
     openGraph: {
       title: project.title,
       description: project.description,
-      url: `${siteUrl}/projects/${id}`,
+      url: fullUrl,
       images: [
         {
           url: imageUrl,
@@ -67,6 +74,9 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
     ...project,
     imageUrl: project.image_url
   };
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://datalab.alex.studio';
+  const fullUrl = `${siteUrl}/projects/${id}`;
 
   return (
     <div className="min-h-screen pb-32 selection:bg-indigo-100 selection:text-indigo-900">
@@ -129,7 +139,7 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
         <aside className="lg:col-span-4 space-y-12">
           <div className="space-y-10">
             <div className="p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] shadow-sm">
-              <SocialShare title={currentProject.title} />
+              <SocialShare title={currentProject.title} url={fullUrl} />
             </div>
 
             <div className="space-y-4">
