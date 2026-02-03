@@ -11,6 +11,36 @@ import {
 import Link from 'next/link';
 import SocialShare from '../../../components/SocialShare';
 
+export async function generateMetadata({ params }: { params: { id: string } }) {
+  const id = params.id;
+  if (!supabase) return {};
+
+  const { data: project } = await supabase
+    .from('projects')
+    .select('title, description, image_url')
+    .eq('id', id)
+    .single();
+
+  if (!project) return { title: 'Project Not Found' };
+
+  return {
+    title: project.title,
+    description: project.description,
+    openGraph: {
+      title: project.title,
+      description: project.description,
+      url: `/projects/${id}`,
+      images: [{ url: project.image_url }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: project.title,
+      description: project.description,
+      images: [project.image_url],
+    },
+  };
+}
+
 export default function ProjectDetailPage() {
   const params = useParams();
   const id = params?.id as string;

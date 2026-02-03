@@ -9,6 +9,53 @@ import SocialShare from '../../../components/SocialShare';
 // @ts-ignore
 import { track } from '@vercel/analytics';
 
+/**
+ * Metadata Generation (Server Side)
+ * Fungsi ini dijalankan oleh Next.js di server untuk mengambil data SEO sebelum halaman dirender.
+ */
+export async function generateMetadata({ params }: { params: { id: string } }) {
+  const id = params.id;
+  
+  if (!supabase) return {};
+
+  const { data: post } = await supabase
+    .from('blogs')
+    .select('title, excerpt, image_url')
+    .eq('id', id)
+    .single();
+
+  if (!post) {
+    return {
+      title: 'Article Not Found',
+    };
+  }
+
+  return {
+    title: post.title,
+    description: post.excerpt,
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      type: 'article',
+      url: `/blog/${id}`,
+      images: [
+        {
+          url: post.image_url,
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.excerpt,
+      images: [post.image_url],
+    },
+  };
+}
+
 export default function BlogDetailPage() {
   const params = useParams();
   const id = params?.id as string;

@@ -15,7 +15,6 @@ const inter = Inter({
   display: 'swap',
   variable: '--font-inter',
   preload: true,
-  // Using adjustFontFallback to prevent layout shifts
   adjustFontFallback: true,
 });
 
@@ -25,10 +24,51 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export const metadata: Metadata = {
+// Pastikan datalab.alex.studio diganti dengan domain asli Anda di Vercel
+const siteConfig = {
   title: 'DataLab | AI & ML Portfolio',
-  description: 'Building intelligent systems with rigor and precision.',
-  metadataBase: new URL('https://datalab.alex.studio'),
+  description: 'Building intelligent systems with rigor and precision. Expert in Deep Learning and Predictive Analytics.',
+  url: 'https://alexdatalabs.vercel.app',
+  ogImage: '/og-main.png', // Letakkan file ini di folder /public (1200x630px)
+};
+
+export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.url),
+  title: {
+    default: siteConfig.title,
+    template: `%s | ${siteConfig.title}`,
+  },
+  description: siteConfig.description,
+  keywords: ['Data Science', 'Machine Learning', 'AI Portfolio', 'Alex Sterling'],
+  authors: [{ name: 'Alex Sterling' }],
+  creator: 'Alex Sterling',
+  openGraph: {
+    type: 'website',
+    locale: 'id_ID',
+    url: siteConfig.url,
+    title: siteConfig.title,
+    description: siteConfig.description,
+    siteName: siteConfig.title,
+    images: [
+      {
+        url: siteConfig.ogImage,
+        width: 1200,
+        height: 630,
+        alt: siteConfig.title,
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: siteConfig.title,
+    description: siteConfig.description,
+    images: [siteConfig.ogImage],
+    creator: '@alexsterling', // Ganti dengan handle twitter Anda
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
