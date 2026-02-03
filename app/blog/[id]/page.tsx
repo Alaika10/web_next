@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { supabase } from '../../../lib/supabase';
 import { BlogPost } from '../../../types';
@@ -10,28 +9,21 @@ import BlogClientActions from '../../../components/BlogClientActions';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 
-const getAbsoluteUrl = (path: string) => {
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://datalab.alex.studio').replace(/\/$/, '');
-  if (!path) return `${baseUrl}/og-main.png`;
-  if (path.startsWith('http')) return path;
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  return `${baseUrl}${cleanPath}`;
-};
-
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const { id } = params;
-  if (!supabase) return { title: 'Configuration Required' };
+  if (!supabase) return {};
 
   try {
     const { data: post } = await supabase
       .from('blogs')
-      .select('title, excerpt, image_url')
+      .select('title, excerpt')
       .eq('id', id)
       .single();
 
     if (!post) return { title: 'Article Not Found' };
 
-    const optimizedOgImage = getAbsoluteUrl(`/api/og/blog/${id}`);
+    // Path relatif akan otomatis dikonversi jadi absolut oleh metadataBase di layout.tsx
+    const ogImageUrl = `/api/og/blog/${id}`;
 
     return {
       title: post.title,
@@ -39,16 +31,22 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       openGraph: {
         title: post.title,
         description: post.excerpt,
-        images: [{ url: optimizedOgImage }],
+        type: 'article',
+        images: [{ url: ogImageUrl, width: 1200, height: 630 }],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: post.title,
+        description: post.excerpt,
+        images: [ogImageUrl],
       },
     };
   } catch (e) {
-    return { title: 'Data Lab Journal' };
+    return { title: 'Blog Post' };
   }
 }
 
 export default async function BlogDetailPage({ params }: { params: { id: string } }) {
-  // Dalam Next.js 14, params bisa diakses langsung, namun kita amankan untuk kompatibilitas masa depan
   const { id } = params;
   
   if (!supabase) {
@@ -57,7 +55,7 @@ export default async function BlogDetailPage({ params }: { params: { id: string 
         <div className="max-w-md space-y-4">
           <AlertTriangle size={48} className="mx-auto text-amber-500" />
           <h1 className="text-2xl font-black">Database Connection Required</h1>
-          <p className="text-slate-500 text-sm">Pastikan Anda telah mengisi <strong>NEXT_PUBLIC_SUPABASE_URL</strong> dan <strong>NEXT_PUBLIC_SUPABASE_ANON_KEY</strong> di file .env.local Anda.</p>
+          <p className="text-slate-500 text-sm">Konfigurasi Supabase tidak ditemukan.</p>
           <Link href="/" className="inline-block text-indigo-600 font-bold hover:underline">Kembali ke Beranda</Link>
         </div>
       </div>
@@ -76,8 +74,6 @@ export default async function BlogDetailPage({ params }: { params: { id: string 
     ...post,
     imageUrl: post.image_url
   };
-
-  const fullUrl = getAbsoluteUrl(`/blog/${id}`);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 selection:bg-indigo-100 selection:text-indigo-900">
@@ -122,13 +118,13 @@ export default async function BlogDetailPage({ params }: { params: { id: string 
           </div>
 
           <div 
-            className="rich-text-content prose prose-xl dark:prose-invert max-w-none prose-headings:font-black prose-headings:tracking-tighter prose-headings:text-slate-900 dark:prose-headings:text-white prose-p:text-slate-600 dark:prose-p:text-slate-400 prose-p:leading-[1.8] prose-img:rounded-[2rem] prose-img:shadow-2xl prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline prose-blockquote:border-l-indigo-600 prose-blockquote:bg-slate-50 dark:prose-blockquote:bg-slate-800/50 prose-blockquote:rounded-r-2xl"
+            className="rich-text-content prose prose-xl dark:prose-invert max-w-none prose-headings:font-black prose-headings:tracking-tighter"
             dangerouslySetInnerHTML={{ __html: (post as any).content_html || blogPost.content }}
           />
           
           <div className="pt-16 border-t border-slate-100 dark:border-slate-800 space-y-10">
             <div className="bg-slate-50 dark:bg-slate-800/50 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800">
-              <SocialShare title={blogPost.title} url={fullUrl} />
+              <SocialShare title={blogPost.title} />
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-8">

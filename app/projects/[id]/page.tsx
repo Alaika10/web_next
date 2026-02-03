@@ -11,57 +11,39 @@ import SocialShare from '../../../components/SocialShare';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 
-const getAbsoluteUrl = (path: string) => {
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://datalab.alex.studio').replace(/\/$/, '');
-  if (!path) return `${baseUrl}/og-main.png`;
-  if (path.startsWith('http')) return path;
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  return `${baseUrl}${cleanPath}`;
-};
-
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const { id } = params;
   if (!supabase) return {};
 
-  const { data: project } = await supabase
-    .from('projects')
-    .select('title, description, image_url')
-    .eq('id', id)
-    .single();
+  try {
+    const { data: project } = await supabase
+      .from('projects')
+      .select('title, description')
+      .eq('id', id)
+      .single();
 
-  if (!project) return { title: 'Project Not Found' };
+    if (!project) return { title: 'Project Not Found' };
 
-  const fullUrl = getAbsoluteUrl(`/projects/${id}`);
-  
-  // MENGGUNAKAN API PROXY UNTUK GAMBAR PREVIEW
-  const optimizedOgImage = getAbsoluteUrl(`/api/og/project/${id}`);
+    const ogImageUrl = `/api/og/project/${id}`;
 
-  return {
-    title: project.title,
-    description: project.description,
-    alternates: {
-      canonical: fullUrl,
-    },
-    openGraph: {
+    return {
       title: project.title,
       description: project.description,
-      url: fullUrl,
-      images: [
-        {
-          url: optimizedOgImage,
-          width: 1200,
-          height: 630,
-          alt: project.title,
-        },
-      ],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: project.title,
-      description: project.description,
-      images: [optimizedOgImage],
-    },
-  };
+      openGraph: {
+        title: project.title,
+        description: project.description,
+        images: [{ url: ogImageUrl, width: 1200, height: 630 }],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: project.title,
+        description: project.description,
+        images: [ogImageUrl],
+      },
+    };
+  } catch (e) {
+    return { title: 'Project Detail' };
+  }
 }
 
 export default async function ProjectDetailPage({ params }: { params: { id: string } }) {
@@ -80,8 +62,6 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
     ...project,
     imageUrl: project.image_url
   };
-
-  const fullUrl = getAbsoluteUrl(`/projects/${id}`);
 
   return (
     <div className="min-h-screen pb-32 selection:bg-indigo-100 selection:text-indigo-900">
@@ -133,67 +113,19 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
       <div className="max-w-7xl mx-auto px-6 md:px-12 mt-20">
         <div className="aspect-[21/9] rounded-[3rem] overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl relative group">
           <Image src={currentProject.imageUrl} fill className="object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-1000" alt={currentProject.title} />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
-          <div className="absolute bottom-10 left-10">
-            <p className="font-mono-tech text-[10px] text-white/50 uppercase tracking-[0.5em]">Visualization / Interface_Output</p>
-          </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 md:px-12 mt-20 grid grid-cols-1 lg:grid-cols-12 gap-20">
         <aside className="lg:col-span-4 space-y-12">
-          <div className="space-y-10">
-            <div className="p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] shadow-sm">
-              <SocialShare title={currentProject.title} url={fullUrl} />
-            </div>
-
-            <div className="space-y-4">
-              <h4 className="font-mono-tech text-[10px] uppercase text-indigo-600 font-black tracking-[0.3em] flex items-center gap-2">
-                <Cpu size={14} /> Core_Stack
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                {currentProject.technologies.map(tech => (
-                  <span key={tech} className="px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-mono-tech text-[10px] font-bold">
-                    {tech}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h4 className="font-mono-tech text-[10px] uppercase text-indigo-600 font-black tracking-[0.3em] flex items-center gap-2">
-                <Layers size={14} /> Architecture
-              </h4>
-              <ul className="space-y-3">
-                {['Transformer Decoder', 'Cross-Attention Layers', 'Quantized INT8', 'Edge Latency < 40ms'].map(item => (
-                  <li key={item} className="flex items-center gap-3 text-xs font-bold text-slate-500">
-                    <Binary size={12} className="text-slate-300" /> {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="p-8 bg-indigo-600 rounded-[2.5rem] text-white space-y-4 shadow-2xl shadow-indigo-200 dark:shadow-none relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-8 translate-x-8 blur-xl"></div>
-              <ShieldCheck size={32} />
-              <h5 className="text-xl font-black">Verified Research</h5>
-              <p className="text-indigo-100 text-xs leading-relaxed opacity-80">Semua implementasi telah melalui unit testing dan benchmark performa yang ketat pada dataset publik.</p>
-            </div>
+          <div className="p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] shadow-sm">
+            <SocialShare title={currentProject.title} />
           </div>
         </aside>
 
         <div className="lg:col-span-8 bg-white dark:bg-slate-900 rounded-[3rem] p-10 md:p-16 border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
-          <div className="flex items-center gap-3 mb-12">
-            <div className="w-1 h-8 bg-indigo-600 rounded-full"></div>
-            <h3 className="text-2xl font-black tracking-tight">Technical Breakdown</h3>
-          </div>
-          
           <div 
-            className="rich-text-content prose prose-lg md:prose-xl dark:prose-invert max-w-none 
-            prose-headings:font-black prose-headings:tracking-tighter prose-headings:text-slate-900 dark:prose-headings:text-white
-            prose-p:text-slate-600 dark:prose-p:text-slate-400 prose-p:leading-[1.8]
-            prose-code:bg-slate-50 dark:prose-code:bg-slate-800 prose-code:px-2 prose-code:py-0.5 prose-code:rounded prose-code:text-indigo-600
-            prose-img:rounded-[2rem] prose-img:shadow-2xl"
+            className="rich-text-content prose prose-lg md:prose-xl dark:prose-invert max-w-none"
             dangerouslySetInnerHTML={{ 
               __html: (project as any).content_html || `<p>${currentProject.description}</p>` 
             }}
