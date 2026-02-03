@@ -1,143 +1,155 @@
 import React from 'react';
+import { supabase } from '../../lib/supabase';
+import { BlogPost } from '../../types';
+import { ArrowLeft, Calendar, User, Tag } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { supabase } from '../../lib/supabase';
-import { BookOpen, Clock, Zap, Star } from 'lucide-react';
-import { BlogPost } from '../../types';
+import SocialShare from '../../components/SocialShare';
+import BlogClientActions from '../../components/BlogClientActions';
+import { notFound } from 'next/navigation';
+import { Metadata } from 'next';
 
-export const revalidate = 60;
+const getAbsoluteUrl = (path: string) => {
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://datalab.alex.studio').replace(/\/$/, '');
+  if (!path) return `${baseUrl}/og-main.png`;
+  if (path.startsWith('http')) return path;
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${baseUrl}${cleanPath}`;
+};
 
-export default async function BlogPage() {
-  let blogs: BlogPost[] = [];
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const { id } = params;
+  if (!supabase) return {};
 
-  if (supabase) {
-    const { data } = await supabase.from('blogs').select('*').order('date', { ascending: false });
-    if (data) {
-      blogs = data.map((b: any) => ({
-        ...b,
-        imageUrl: b.image_url,
-        isHeadline: b.is_headline,
-        isTrending: b.is_trending
-      }));
-    }
-  }
+  const { data: post } = await supabase
+    .from('blogs')
+    .select('title, excerpt, image_url')
+    .eq('id', id)
+    .single();
 
-  const featuredPost = blogs.find(b => b.isHeadline) || blogs[0];
-  const trendingPosts = blogs.filter(b => b.isTrending).slice(0, 4);
-  const regularPosts = blogs.filter(b => b.id !== featuredPost?.id);
+  if (!post) return { title: 'Article Not Found' };
+
+  const fullUrl = getAbsoluteUrl(`/blog/${id}`);
+  
+  // MENGGUNAKAN API PROXY UNTUK GAMBAR PREVIEW
+  // Ini memastikan gambar berukuran optimal dan berformat file asli, bukan base64
+  const optimizedOgImage = getAbsoluteUrl(`/api/og/blog/${id}`);
+
+  return {
+    title: post.title,
+    description: post.excerpt,
+    alternates: {
+      canonical: fullUrl,
+    },
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      type: 'article',
+      url: fullUrl,
+      siteName: 'DataLab Alex Sterling',
+      images: [
+        {
+          url: optimizedOgImage,
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.excerpt,
+      images: [optimizedOgImage],
+    },
+  };
+}
+
+export default async function BlogDetailPage({ params }: { params: { id: string } }) {
+  const { id } = params;
+  
+  if (!supabase) return notFound();
+
+  const { data: post, error } = await supabase
+    .from('blogs')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error || !post) return notFound();
+
+  const blogPost: BlogPost = {
+    ...post,
+    imageUrl: post.image_url
+  };
+
+  const fullUrl = getAbsoluteUrl(`/blog/${id}`);
 
   return (
-    <div className="py-12 md:py-20 px-6 md:px-12 max-w-7xl mx-auto animate-in space-y-16 md:space-y-24">
-      {/* Editorial Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 border-b border-slate-200 dark:border-slate-800 pb-12">
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-mono text-[10px] uppercase tracking-[0.4em]">
-            <BookOpen size={14} /> The Research Journal / Vol. 25
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 selection:bg-indigo-100 selection:text-indigo-900">
+      <header className="relative h-[50vh] md:h-[65vh] w-full overflow-hidden">
+        <Image 
+          src={blogPost.imageUrl} 
+          fill
+          priority
+          className="object-cover scale-105" 
+          alt={blogPost.title} 
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-50 dark:from-slate-950 via-slate-900/40 to-transparent"></div>
+        <div className="absolute top-8 left-6 md:left-12">
+           <Link href="/blog" className="group flex items-center gap-2 px-5 py-2.5 bg-white/10 backdrop-blur-xl text-white rounded-full font-bold text-xs uppercase tracking-widest border border-white/20 hover:bg-white/30 transition-all">
+             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back
+           </Link>
+        </div>
+      </header>
+
+      <article className="max-w-4xl mx-auto px-6 -mt-24 md:-mt-40 relative z-10">
+        <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] md:rounded-[4rem] p-8 md:p-16 lg:p-20 shadow-2xl border border-slate-200/50 dark:border-slate-800/50 space-y-12">
+          <div className="space-y-6">
+            <div className="flex flex-wrap items-center gap-4 md:gap-8 text-[10px] md:text-xs font-black uppercase tracking-widest text-slate-400">
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-full">
+                <Calendar size={14} className="text-indigo-600"/> {blogPost.date}
+              </div>
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-full">
+                <User size={14} className="text-indigo-600"/> {blogPost.author}
+              </div>
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-full">
+                <Tag size={14} className="text-indigo-600"/> {blogPost.tags?.[0] || 'Tech'}
+              </div>
+            </div>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black leading-[1.1] tracking-tighter text-slate-900 dark:text-white">
+              {blogPost.title}
+            </h1>
+            <p className="text-xl md:text-2xl text-slate-500 dark:text-slate-400 italic leading-relaxed border-l-4 border-indigo-600 pl-6 md:pl-8 py-2">
+              {blogPost.excerpt}
+            </p>
           </div>
-          <h1 className="text-5xl md:text-8xl font-black tracking-tighter leading-none">
-            Deep <span className="text-slate-400">Insights.</span>
-          </h1>
-        </div>
-        <div className="flex flex-col items-start md:items-end gap-4 w-full md:w-auto">
-          <p className="md:text-right text-slate-500 font-medium max-w-[320px] text-sm leading-relaxed">
-            Exploring neural architectures, algorithmic ethics, and large-scale data systems.
-          </p>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
-        <div className="lg:col-span-8 space-y-16 md:space-y-24">
-          {featuredPost && (
-            <section className="group">
-              <Link href={`/blog/${featuredPost.id}`} className="space-y-8 block">
-                <div className="aspect-[21/9] rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 relative shadow-2xl transition-all duration-700 group-hover:shadow-indigo-500/10">
-                  {featuredPost.imageUrl && (
-                    <Image 
-                      src={featuredPost.imageUrl} 
-                      alt={featuredPost.title} 
-                      fill
-                      sizes="100vw"
-                      className="object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 scale-105 group-hover:scale-100"
-                      priority
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
-                  <div className="absolute bottom-6 left-6 right-6 md:bottom-10 md:left-10 md:right-10 flex justify-between items-end">
-                    <div className="space-y-2">
-                      <div className="px-3 py-1 bg-indigo-600 text-white font-mono text-[8px] uppercase tracking-widest rounded-full w-fit flex items-center gap-2">
-                        <Star size={10} fill="white" /> Featured_Entry
-                      </div>
-                      <h2 className="text-2xl md:text-5xl font-black text-white tracking-tighter leading-tight group-hover:text-indigo-400 transition-colors">
-                        {featuredPost.title}
-                      </h2>
-                    </div>
-                  </div>
-                </div>
-                <div className="px-2 md:px-4 space-y-4">
-                   <div className="flex items-center gap-4 md:gap-6 font-mono text-[9px] md:text-[10px] text-slate-400 uppercase tracking-widest">
-                     <span className="flex items-center gap-1.5"><Clock size={12} /> 6 MIN_READ</span>
-                     <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-                     <span>{featuredPost.date}</span>
-                     <span className="w-1 h-1 bg-slate-300 rounded-full hidden sm:block"></span>
-                     <span className="text-indigo-500 font-black hidden sm:block">#HEADLINE</span>
-                   </div>
-                   <p className="text-lg md:text-xl text-slate-500 dark:text-slate-400 leading-relaxed max-w-3xl">
-                     {featuredPost.excerpt}
-                   </p>
-                </div>
-              </Link>
-            </section>
-          )}
+          <div 
+            className="rich-text-content prose prose-xl dark:prose-invert max-w-none prose-headings:font-black prose-headings:tracking-tighter prose-headings:text-slate-900 dark:prose-headings:text-white prose-p:text-slate-600 dark:prose-p:text-slate-400 prose-p:leading-[1.8] prose-img:rounded-[2rem] prose-img:shadow-2xl prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline prose-blockquote:border-l-indigo-600 prose-blockquote:bg-slate-50 dark:prose-blockquote:bg-slate-800/50 prose-blockquote:rounded-r-2xl"
+            dangerouslySetInnerHTML={{ __html: (post as any).content_html || blogPost.content }}
+          />
+          
+          <div className="pt-16 border-t border-slate-100 dark:border-slate-800 space-y-10">
+            <div className="bg-slate-50 dark:bg-slate-800/50 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800">
+              <SocialShare title={blogPost.title} url={fullUrl} />
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 pt-12 border-t border-slate-100 dark:border-slate-800">
-            {regularPosts.map((post, idx) => (
-              <article key={post.id} className="group space-y-6">
-                <Link href={`/blog/${post.id}`} className="block space-y-6">
-                  <div className="aspect-[16/10] relative rounded-[2rem] overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm transition-all duration-500 group-hover:shadow-xl">
-                    {post.imageUrl && (
-                      <Image 
-                        src={post.imageUrl} 
-                        alt={post.title} 
-                        fill
-                        sizes="(max-width: 768px) 100vw, 33vw"
-                        className="object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" 
-                      />
-                    )}
-                  </div>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-[9px] text-indigo-500 font-black uppercase tracking-[0.2em]">{post.tags?.[0] || 'RESEARCH'}</span>
-                      <span className="font-mono text-[9px] text-slate-400">ID: #{String(idx + 1).padStart(2, '0')}</span>
-                    </div>
-                    <h3 className="text-xl md:text-2xl font-black tracking-tight leading-snug group-hover:text-indigo-600 transition-colors">{post.title}</h3>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed line-clamp-2">{post.excerpt}</p>
-                  </div>
-                </Link>
-              </article>
-            ))}
-          </div>
-        </div>
-
-        <aside className="lg:col-span-4 space-y-16 mt-12 lg:mt-0">
-          <div className="p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] shadow-sm space-y-8">
-            <h4 className="font-mono text-[10px] uppercase text-slate-400 font-black tracking-[0.3em] flex items-center gap-2">
-              <Zap size={14} className="text-amber-500" /> Trending_Research
-            </h4>
-            <div className="space-y-8">
-              {trendingPosts.length > 0 ? (
-                trendingPosts.map((post, i) => (
-                  <Link href={`/blog/${post.id}`} key={post.id} className="group cursor-pointer flex gap-4">
-                    <span className="font-mono text-xl text-slate-200 dark:text-slate-800 font-black">0{i+1}</span>
-                    <p className="text-xs font-black leading-relaxed group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{post.title}</p>
-                  </Link>
-                ))
-              ) : (
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No active trends</p>
-              )}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-8">
+              <div className="flex items-center gap-5">
+                 <div className="w-16 h-16 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-lg">
+                   {blogPost.author.charAt(0)}
+                 </div>
+                 <div>
+                   <p className="text-lg font-black">{blogPost.author}</p>
+                   <p className="text-xs text-slate-400 uppercase font-bold tracking-widest">Thought Leader & Engineer</p>
+                 </div>
+              </div>
+              <BlogClientActions title={blogPost.title} />
             </div>
           </div>
-        </aside>
-      </div>
+        </div>
+      </article>
     </div>
   );
 }
