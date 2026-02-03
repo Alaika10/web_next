@@ -12,9 +12,11 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 
 const getAbsoluteUrl = (path: string) => {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://datalab.alex.studio';
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://datalab.alex.studio').replace(/\/$/, '');
+  if (!path) return `${baseUrl}/og-main.png`;
   if (path.startsWith('http')) return path;
-  return `${baseUrl.replace(/\/$/, '')}${path.startsWith('/') ? '' : '/'}${path}`;
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${baseUrl}${cleanPath}`;
 };
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
@@ -30,7 +32,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   if (!project) return { title: 'Project Not Found' };
 
   const fullUrl = getAbsoluteUrl(`/projects/${id}`);
-  const imageUrl = getAbsoluteUrl(project.image_url || '/og-main.png');
+  const imageUrl = getAbsoluteUrl(project.image_url);
 
   return {
     title: project.title,
@@ -45,9 +47,11 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       images: [
         {
           url: imageUrl,
+          secureUrl: imageUrl,
           width: 1200,
           height: 630,
           alt: project.title,
+          type: 'image/jpeg',
         },
       ],
     },

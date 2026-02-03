@@ -9,11 +9,12 @@ import BlogClientActions from '../../../components/BlogClientActions';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 
-// Helper untuk memastikan URL absolut
 const getAbsoluteUrl = (path: string) => {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://datalab.alex.studio';
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://datalab.alex.studio').replace(/\/$/, '');
+  if (!path) return `${baseUrl}/og-main.png`;
   if (path.startsWith('http')) return path;
-  return `${baseUrl.replace(/\/$/, '')}${path.startsWith('/') ? '' : '/'}${path}`;
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${baseUrl}${cleanPath}`;
 };
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
@@ -29,7 +30,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   if (!post) return { title: 'Article Not Found' };
 
   const fullUrl = getAbsoluteUrl(`/blog/${id}`);
-  const imageUrl = getAbsoluteUrl(post.image_url || '/og-main.png');
+  const imageUrl = getAbsoluteUrl(post.image_url);
 
   return {
     title: post.title,
@@ -46,9 +47,11 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       images: [
         {
           url: imageUrl,
+          secureUrl: imageUrl,
           width: 1200,
           height: 630,
           alt: post.title,
+          type: 'image/jpeg', // Memberi petunjuk eksplisit ke bot
         },
       ],
     },
