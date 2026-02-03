@@ -11,6 +11,12 @@ import SocialShare from '../../../components/SocialShare';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 
+const getAbsoluteUrl = (path: string) => {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://datalab.alex.studio';
+  if (path.startsWith('http')) return path;
+  return `${baseUrl.replace(/\/$/, '')}${path.startsWith('/') ? '' : '/'}${path}`;
+};
+
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const { id } = params;
   if (!supabase) return {};
@@ -23,12 +29,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 
   if (!project) return { title: 'Project Not Found' };
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://datalab.alex.studio';
-  const imageUrl = project.image_url?.startsWith('http') 
-    ? project.image_url 
-    : `${siteUrl}${project.image_url || '/og-main.png'}`;
-    
-  const fullUrl = `${siteUrl}/projects/${id}`;
+  const fullUrl = getAbsoluteUrl(`/projects/${id}`);
+  const imageUrl = getAbsoluteUrl(project.image_url || '/og-main.png');
 
   return {
     title: project.title,
@@ -75,8 +77,7 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
     imageUrl: project.image_url
   };
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://datalab.alex.studio';
-  const fullUrl = `${siteUrl}/projects/${id}`;
+  const fullUrl = getAbsoluteUrl(`/projects/${id}`);
 
   return (
     <div className="min-h-screen pb-32 selection:bg-indigo-100 selection:text-indigo-900">

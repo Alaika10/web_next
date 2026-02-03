@@ -9,6 +9,13 @@ import BlogClientActions from '../../../components/BlogClientActions';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 
+// Helper untuk memastikan URL absolut
+const getAbsoluteUrl = (path: string) => {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://datalab.alex.studio';
+  if (path.startsWith('http')) return path;
+  return `${baseUrl.replace(/\/$/, '')}${path.startsWith('/') ? '' : '/'}${path}`;
+};
+
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const { id } = params;
   if (!supabase) return {};
@@ -21,13 +28,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 
   if (!post) return { title: 'Article Not Found' };
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://datalab.alex.studio';
-  // Pastikan URL gambar absolut
-  const imageUrl = post.image_url?.startsWith('http') 
-    ? post.image_url 
-    : `${siteUrl}${post.image_url || '/og-main.png'}`;
-  
-  const fullUrl = `${siteUrl}/blog/${id}`;
+  const fullUrl = getAbsoluteUrl(`/blog/${id}`);
+  const imageUrl = getAbsoluteUrl(post.image_url || '/og-main.png');
 
   return {
     title: post.title,
@@ -40,6 +42,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       description: post.excerpt,
       type: 'article',
       url: fullUrl,
+      siteName: 'DataLab Alex Sterling',
       images: [
         {
           url: imageUrl,
@@ -76,8 +79,7 @@ export default async function BlogDetailPage({ params }: { params: { id: string 
     imageUrl: post.image_url
   };
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://datalab.alex.studio';
-  const fullUrl = `${siteUrl}/blog/${id}`;
+  const fullUrl = getAbsoluteUrl(`/blog/${id}`);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 selection:bg-indigo-100 selection:text-indigo-900">
