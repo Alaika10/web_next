@@ -7,8 +7,9 @@ import Image from 'next/image';
 import SocialShare from '../../../components/SocialShare';
 import BlogClientActions from '../../../components/BlogClientActions';
 import { notFound } from 'next/navigation';
+import { Metadata } from 'next';
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const { id } = params;
   if (!supabase) return {};
 
@@ -20,6 +21,9 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
 
   if (!post) return { title: 'Article Not Found' };
 
+  const imageUrl = post.image_url || '/og-main.png';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://datalab.alex.studio';
+
   return {
     title: post.title,
     description: post.excerpt,
@@ -27,14 +31,21 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
       title: post.title,
       description: post.excerpt,
       type: 'article',
-      url: `/blog/${id}`,
-      images: [{ url: post.image_url, width: 1200, height: 630 }],
+      url: `${siteUrl}/blog/${id}`,
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        },
+      ],
     },
     twitter: {
       card: 'summary_large_image',
       title: post.title,
       description: post.excerpt,
-      images: [post.image_url],
+      images: [imageUrl],
     },
   };
 }
@@ -117,7 +128,6 @@ export default async function BlogDetailPage({ params }: { params: { id: string 
                    <p className="text-xs text-slate-400 uppercase font-bold tracking-widest">Thought Leader & Engineer</p>
                  </div>
               </div>
-              {/* Client Component untuk tombol interaktif */}
               <BlogClientActions title={blogPost.title} />
             </div>
           </div>

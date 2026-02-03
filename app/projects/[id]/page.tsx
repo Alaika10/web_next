@@ -9,8 +9,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import SocialShare from '../../../components/SocialShare';
 import { notFound } from 'next/navigation';
+import { Metadata } from 'next';
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const { id } = params;
   if (!supabase) return {};
 
@@ -22,20 +23,30 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
 
   if (!project) return { title: 'Project Not Found' };
 
+  const imageUrl = project.image_url || '/og-main.png';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://datalab.alex.studio';
+
   return {
     title: project.title,
     description: project.description,
     openGraph: {
       title: project.title,
       description: project.description,
-      url: `/projects/${id}`,
-      images: [{ url: project.image_url }],
+      url: `${siteUrl}/projects/${id}`,
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: project.title,
+        },
+      ],
     },
     twitter: {
       card: 'summary_large_image',
       title: project.title,
       description: project.description,
-      images: [project.image_url],
+      images: [imageUrl],
     },
   };
 }
