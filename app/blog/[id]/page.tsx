@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { supabase } from '../../../lib/supabase';
 import { BlogPost } from '../../../types';
-import { ArrowLeft, Calendar, User, Tag } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Tag, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import SocialShare from '../../../components/SocialShare';
@@ -19,55 +20,49 @@ const getAbsoluteUrl = (path: string) => {
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const { id } = params;
-  if (!supabase) return {};
+  if (!supabase) return { title: 'Configuration Required' };
 
-  const { data: post } = await supabase
-    .from('blogs')
-    .select('title, excerpt, image_url')
-    .eq('id', id)
-    .single();
+  try {
+    const { data: post } = await supabase
+      .from('blogs')
+      .select('title, excerpt, image_url')
+      .eq('id', id)
+      .single();
 
-  if (!post) return { title: 'Article Not Found' };
+    if (!post) return { title: 'Article Not Found' };
 
-  const fullUrl = getAbsoluteUrl(`/blog/${id}`);
-  const imageUrl = getAbsoluteUrl(post.image_url);
+    const optimizedOgImage = getAbsoluteUrl(`/api/og/blog/${id}`);
 
-  return {
-    title: post.title,
-    description: post.excerpt,
-    alternates: {
-      canonical: fullUrl,
-    },
-    openGraph: {
+    return {
       title: post.title,
       description: post.excerpt,
-      type: 'article',
-      url: fullUrl,
-      siteName: 'DataLab Alex Sterling',
-      images: [
-        {
-          url: imageUrl,
-          secureUrl: imageUrl,
-          width: 1200,
-          height: 630,
-          alt: post.title,
-          type: 'image/jpeg', // Memberi petunjuk eksplisit ke bot
-        },
-      ],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: post.title,
-      description: post.excerpt,
-      images: [imageUrl],
-    },
-  };
+      openGraph: {
+        title: post.title,
+        description: post.excerpt,
+        images: [{ url: optimizedOgImage }],
+      },
+    };
+  } catch (e) {
+    return { title: 'Data Lab Journal' };
+  }
 }
 
 export default async function BlogDetailPage({ params }: { params: { id: string } }) {
+  // Dalam Next.js 14, params bisa diakses langsung, namun kita amankan untuk kompatibilitas masa depan
   const { id } = params;
   
-  if (!supabase) return notFound();
+  if (!supabase) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 text-center">
+        <div className="max-w-md space-y-4">
+          <AlertTriangle size={48} className="mx-auto text-amber-500" />
+          <h1 className="text-2xl font-black">Database Connection Required</h1>
+          <p className="text-slate-500 text-sm">Pastikan Anda telah mengisi <strong>NEXT_PUBLIC_SUPABASE_URL</strong> dan <strong>NEXT_PUBLIC_SUPABASE_ANON_KEY</strong> di file .env.local Anda.</p>
+          <Link href="/" className="inline-block text-indigo-600 font-bold hover:underline">Kembali ke Beranda</Link>
+        </div>
+      </div>
+    );
+  }
 
   const { data: post, error } = await supabase
     .from('blogs')
@@ -87,13 +82,15 @@ export default async function BlogDetailPage({ params }: { params: { id: string 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 selection:bg-indigo-100 selection:text-indigo-900">
       <header className="relative h-[50vh] md:h-[65vh] w-full overflow-hidden">
-        <Image 
-          src={blogPost.imageUrl} 
-          fill
-          priority
-          className="object-cover scale-105" 
-          alt={blogPost.title} 
-        />
+        {blogPost.imageUrl && (
+          <Image 
+            src={blogPost.imageUrl} 
+            fill
+            priority
+            className="object-cover scale-105" 
+            alt={blogPost.title} 
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-50 dark:from-slate-950 via-slate-900/40 to-transparent"></div>
         <div className="absolute top-8 left-6 md:left-12">
            <Link href="/blog" className="group flex items-center gap-2 px-5 py-2.5 bg-white/10 backdrop-blur-xl text-white rounded-full font-bold text-xs uppercase tracking-widest border border-white/20 hover:bg-white/30 transition-all">
