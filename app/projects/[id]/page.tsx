@@ -1,11 +1,13 @@
 import React from 'react';
 import { supabase } from '../../../lib/supabase';
-import { BlogPost } from '../../../types';
-import { ArrowLeft, Calendar, User, Tag } from 'lucide-react';
+import { Project } from '../../../types';
+import { 
+  ArrowLeft, ExternalLink, Cpu, Github, 
+  Binary, Layers, ShieldCheck 
+} from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import SocialShare from '../../../components/SocialShare';
-import BlogClientActions from '../../../components/BlogClientActions';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 
@@ -21,135 +23,183 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const { id } = params;
   if (!supabase) return {};
 
-  const { data: post } = await supabase
-    .from('blogs')
-    .select('title, excerpt, image_url')
+  const { data: project } = await supabase
+    .from('projects')
+    .select('title, description, image_url')
     .eq('id', id)
     .single();
 
-  if (!post) return { title: 'Article Not Found' };
+  if (!project) return { title: 'Project Not Found' };
 
-  const fullUrl = getAbsoluteUrl(`/blog/${id}`);
+  const fullUrl = getAbsoluteUrl(`/projects/${id}`);
   
   // MENGGUNAKAN API PROXY UNTUK GAMBAR PREVIEW
-  // Ini memastikan gambar berukuran optimal dan berformat file asli, bukan base64
-  const optimizedOgImage = getAbsoluteUrl(`/api/og/blog/${id}`);
+  const optimizedOgImage = getAbsoluteUrl(`/api/og/project/${id}`);
 
   return {
-    title: post.title,
-    description: post.excerpt,
+    title: project.title,
+    description: project.description,
     alternates: {
       canonical: fullUrl,
     },
     openGraph: {
-      title: post.title,
-      description: post.excerpt,
-      type: 'article',
+      title: project.title,
+      description: project.description,
       url: fullUrl,
-      siteName: 'DataLab Alex Sterling',
       images: [
         {
           url: optimizedOgImage,
           width: 1200,
           height: 630,
-          alt: post.title,
+          alt: project.title,
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
-      title: post.title,
-      description: post.excerpt,
+      title: project.title,
+      description: project.description,
       images: [optimizedOgImage],
     },
   };
 }
 
-export default async function BlogDetailPage({ params }: { params: { id: string } }) {
+export default async function ProjectDetailPage({ params }: { params: { id: string } }) {
   const { id } = params;
-  
   if (!supabase) return notFound();
 
-  const { data: post, error } = await supabase
-    .from('blogs')
+  const { data: project, error } = await supabase
+    .from('projects')
     .select('*')
     .eq('id', id)
     .single();
 
-  if (error || !post) return notFound();
+  if (error || !project) return notFound();
 
-  const blogPost: BlogPost = {
-    ...post,
-    imageUrl: post.image_url
+  const currentProject: Project = {
+    ...project,
+    imageUrl: project.image_url
   };
 
-  const fullUrl = getAbsoluteUrl(`/blog/${id}`);
+  const fullUrl = getAbsoluteUrl(`/projects/${id}`);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 selection:bg-indigo-100 selection:text-indigo-900">
-      <header className="relative h-[50vh] md:h-[65vh] w-full overflow-hidden">
-        <Image 
-          src={blogPost.imageUrl} 
-          fill
-          priority
-          className="object-cover scale-105" 
-          alt={blogPost.title} 
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-50 dark:from-slate-950 via-slate-900/40 to-transparent"></div>
-        <div className="absolute top-8 left-6 md:left-12">
-           <Link href="/blog" className="group flex items-center gap-2 px-5 py-2.5 bg-white/10 backdrop-blur-xl text-white rounded-full font-bold text-xs uppercase tracking-widest border border-white/20 hover:bg-white/30 transition-all">
-             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back
-           </Link>
-        </div>
-      </header>
-
-      <article className="max-w-4xl mx-auto px-6 -mt-24 md:-mt-40 relative z-10">
-        <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] md:rounded-[4rem] p-8 md:p-16 lg:p-20 shadow-2xl border border-slate-200/50 dark:border-slate-800/50 space-y-12">
-          <div className="space-y-6">
-            <div className="flex flex-wrap items-center gap-4 md:gap-8 text-[10px] md:text-xs font-black uppercase tracking-widest text-slate-400">
-              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-full">
-                <Calendar size={14} className="text-indigo-600"/> {blogPost.date}
+    <div className="min-h-screen pb-32 selection:bg-indigo-100 selection:text-indigo-900">
+      <div className="max-w-7xl mx-auto px-6 md:px-12 pt-12">
+        <Link href="/projects" className="inline-flex items-center gap-3 text-slate-400 hover:text-indigo-600 transition-colors font-mono-tech text-[10px] uppercase tracking-[0.2em] mb-12">
+          <ArrowLeft size={14} /> Back to Repository
+        </Link>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+          <div className="lg:col-span-8 space-y-8">
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <span className="px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-lg font-mono-tech text-[9px] uppercase font-black tracking-widest">Model_V1.0</span>
+                <span className="text-slate-300 font-mono-tech text-[9px]">/</span>
+                <span className="font-mono-tech text-[9px] text-slate-400 uppercase tracking-widest">Created: {new Date(currentProject.createdAt || (project as any).created_at).toLocaleDateString()}</span>
               </div>
-              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-full">
-                <User size={14} className="text-indigo-600"/> {blogPost.author}
-              </div>
-              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-full">
-                <Tag size={14} className="text-indigo-600"/> {blogPost.tags?.[0] || 'Tech'}
-              </div>
+              <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-none break-words">
+                {currentProject.title}
+              </h1>
             </div>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black leading-[1.1] tracking-tighter text-slate-900 dark:text-white">
-              {blogPost.title}
-            </h1>
-            <p className="text-xl md:text-2xl text-slate-500 dark:text-slate-400 italic leading-relaxed border-l-4 border-indigo-600 pl-6 md:pl-8 py-2">
-              {blogPost.excerpt}
+
+            <p className="text-2xl text-slate-500 dark:text-slate-400 leading-relaxed font-medium max-w-2xl">
+              {currentProject.description}
             </p>
           </div>
 
-          <div 
-            className="rich-text-content prose prose-xl dark:prose-invert max-w-none prose-headings:font-black prose-headings:tracking-tighter prose-headings:text-slate-900 dark:prose-headings:text-white prose-p:text-slate-600 dark:prose-p:text-slate-400 prose-p:leading-[1.8] prose-img:rounded-[2rem] prose-img:shadow-2xl prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline prose-blockquote:border-l-indigo-600 prose-blockquote:bg-slate-50 dark:prose-blockquote:bg-slate-800/50 prose-blockquote:rounded-r-2xl"
-            dangerouslySetInnerHTML={{ __html: (post as any).content_html || blogPost.content }}
-          />
-          
-          <div className="pt-16 border-t border-slate-100 dark:border-slate-800 space-y-10">
-            <div className="bg-slate-50 dark:bg-slate-800/50 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800">
-              <SocialShare title={blogPost.title} url={fullUrl} />
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-8">
-              <div className="flex items-center gap-5">
-                 <div className="w-16 h-16 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-lg">
-                   {blogPost.author.charAt(0)}
-                 </div>
-                 <div>
-                   <p className="text-lg font-black">{blogPost.author}</p>
-                   <p className="text-xs text-slate-400 uppercase font-bold tracking-widest">Thought Leader & Engineer</p>
-                 </div>
-              </div>
-              <BlogClientActions title={blogPost.title} />
+          <div className="lg:col-span-4 flex flex-col justify-end gap-6">
+            <div className="p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] space-y-6 shadow-sm">
+               <div className="flex items-center justify-between">
+                 <span className="font-mono-tech text-[10px] uppercase text-slate-400">System Accuracy</span>
+                 <span className="font-mono-tech text-xs font-black text-emerald-500">98.4%</span>
+               </div>
+               <div className="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                 <div className="w-[98%] h-full bg-emerald-500"></div>
+               </div>
+               <div className="flex gap-4">
+                 <a href={currentProject.link} className="flex-1 flex items-center justify-center gap-2 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all">
+                   Deploy <ExternalLink size={12} />
+                 </a>
+                 <a href="#" className="w-14 h-14 flex items-center justify-center border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-400 hover:text-indigo-600 hover:border-indigo-600 transition-all">
+                   <Github size={20} />
+                 </a>
+               </div>
             </div>
           </div>
         </div>
-      </article>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 md:px-12 mt-20">
+        <div className="aspect-[21/9] rounded-[3rem] overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl relative group">
+          <Image src={currentProject.imageUrl} fill className="object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-1000" alt={currentProject.title} />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
+          <div className="absolute bottom-10 left-10">
+            <p className="font-mono-tech text-[10px] text-white/50 uppercase tracking-[0.5em]">Visualization / Interface_Output</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 md:px-12 mt-20 grid grid-cols-1 lg:grid-cols-12 gap-20">
+        <aside className="lg:col-span-4 space-y-12">
+          <div className="space-y-10">
+            <div className="p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] shadow-sm">
+              <SocialShare title={currentProject.title} url={fullUrl} />
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="font-mono-tech text-[10px] uppercase text-indigo-600 font-black tracking-[0.3em] flex items-center gap-2">
+                <Cpu size={14} /> Core_Stack
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {currentProject.technologies.map(tech => (
+                  <span key={tech} className="px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-mono-tech text-[10px] font-bold">
+                    {tech}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="font-mono-tech text-[10px] uppercase text-indigo-600 font-black tracking-[0.3em] flex items-center gap-2">
+                <Layers size={14} /> Architecture
+              </h4>
+              <ul className="space-y-3">
+                {['Transformer Decoder', 'Cross-Attention Layers', 'Quantized INT8', 'Edge Latency < 40ms'].map(item => (
+                  <li key={item} className="flex items-center gap-3 text-xs font-bold text-slate-500">
+                    <Binary size={12} className="text-slate-300" /> {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="p-8 bg-indigo-600 rounded-[2.5rem] text-white space-y-4 shadow-2xl shadow-indigo-200 dark:shadow-none relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-8 translate-x-8 blur-xl"></div>
+              <ShieldCheck size={32} />
+              <h5 className="text-xl font-black">Verified Research</h5>
+              <p className="text-indigo-100 text-xs leading-relaxed opacity-80">Semua implementasi telah melalui unit testing dan benchmark performa yang ketat pada dataset publik.</p>
+            </div>
+          </div>
+        </aside>
+
+        <div className="lg:col-span-8 bg-white dark:bg-slate-900 rounded-[3rem] p-10 md:p-16 border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-3 mb-12">
+            <div className="w-1 h-8 bg-indigo-600 rounded-full"></div>
+            <h3 className="text-2xl font-black tracking-tight">Technical Breakdown</h3>
+          </div>
+          
+          <div 
+            className="rich-text-content prose prose-lg md:prose-xl dark:prose-invert max-w-none 
+            prose-headings:font-black prose-headings:tracking-tighter prose-headings:text-slate-900 dark:prose-headings:text-white
+            prose-p:text-slate-600 dark:prose-p:text-slate-400 prose-p:leading-[1.8]
+            prose-code:bg-slate-50 dark:prose-code:bg-slate-800 prose-code:px-2 prose-code:py-0.5 prose-code:rounded prose-code:text-indigo-600
+            prose-img:rounded-[2rem] prose-img:shadow-2xl"
+            dangerouslySetInnerHTML={{ 
+              __html: (project as any).content_html || `<p>${currentProject.description}</p>` 
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 }
