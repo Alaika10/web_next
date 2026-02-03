@@ -1,4 +1,3 @@
-
 'use client';
 import React from 'react';
 import { usePathname } from 'next/navigation';
@@ -13,7 +12,7 @@ const Footer: React.FC = () => {
     <footer className="py-12 px-6 border-t mt-12 bg-white dark:bg-slate-900">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
         <div className="space-y-2">
-          <p className="font-bold text-2xl bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">DataLab Studio</p>
+          <p className="font-bold text-2xl bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">DataLabs by Alex</p>
           <p className="text-slate-500 text-sm max-w-xs">Building intelligent systems with rigor and precision.</p>
         </div>
         <div className="flex space-x-8">

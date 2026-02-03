@@ -22,34 +22,35 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-// URL Produksi Anda (Wajib HTTPS untuk Social Preview)
 const deploymentUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://datalab.alex.studio';
 
 export const metadata: Metadata = {
-  // metadataBase sangat penting agar Next.js bisa mengonversi path relatif menjadi absolut untuk crawler
   metadataBase: new URL(deploymentUrl),
   title: {
-    default: 'DataLab | Alex Sterling Portfolio',
-    template: '%s | DataLab',
+    default: 'DataLabs by Alex',
+    template: '%s | DataLabs',
   },
   description: 'Building intelligent systems with rigor and precision. Expert in Deep Learning and Predictive Analytics.',
+  icons: {
+    icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧬</text></svg>',
+  },
   openGraph: {
     type: 'website',
     locale: 'id_ID',
     url: deploymentUrl,
-    siteName: 'DataLab Studio',
+    siteName: 'DataLabs by Alex',
     images: [
       {
-        url: '/og-main.png', // Fallback image di /public/og-main.png
+        url: '/og-main.png',
         width: 1200,
         height: 630,
-        alt: 'DataLab Alex Sterling',
+        alt: 'DataLabs by Alex Sterling',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'DataLab | Alex Sterling',
+    title: 'DataLabs by Alex',
     description: 'Expert in Deep Learning and Predictive Analytics.',
     images: ['/og-main.png'],
   },

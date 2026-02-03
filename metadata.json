@@ -1,7 +1,5 @@
 {
-  "name": "Zenith Portfolio CMS",
+  "name": "DataLabs by Alex",
   "description": "A high-performance personal portfolio with a built-in admin dashboard for managing blogs, projects, and profile details, featuring AI-powered content generation.",
-  "requestFramePermissions": [
-    "camera"
-  ]
+  "requestFramePermissions": []
 }

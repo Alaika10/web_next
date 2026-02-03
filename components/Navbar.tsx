@@ -73,7 +73,7 @@ const Navbar: React.FC = () => {
               D
             </div>
             <span className="font-black text-lg tracking-tighter uppercase text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-              DataLab
+              DataLabs
             </span>
           </Link>
 
@@ -126,13 +126,11 @@ const Navbar: React.FC = () => {
           isMenuOpen ? 'visible pointer-events-auto' : 'invisible pointer-events-none'
         }`}
       >
-        {/* Backdrop - Made Solid White for Light Mode */}
         <div 
           className={`absolute inset-0 bg-white dark:bg-slate-950 transition-opacity duration-500 ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`} 
           onClick={() => setIsMenuOpen(false)}
         ></div>
         
-        {/* Animated Container */}
         <div className={`relative h-full flex flex-col pt-32 pb-12 px-10 overflow-y-auto ${isMenuOpen ? 'animate-premium-in' : ''}`}>
           <div className="flex-1 space-y-2">
             <p className="font-mono text-[9px] uppercase tracking-[0.4em] text-indigo-600 dark:text-indigo-400 font-black mb-8 opacity-90">
