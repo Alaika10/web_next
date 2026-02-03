@@ -25,53 +25,31 @@ export async function GET(
       return NextResponse.redirect(new URL('/og-main.png', request.url));
     }
 
-    let uint8Array: Uint8Array;
-    let contentType = 'image/jpeg';
-
-    // 2. Cek apakah ini Base64 atau URL
-    if (data.image_url.startsWith('data:image')) {
-      // Handling Base64
-      const parts = data.image_url.split(',');
-      const base64Data = parts[1];
-      const mimeMatch = parts[0].match(/data:(.*?);/);
-      if (mimeMatch) contentType = mimeMatch[1];
-      
-      // Konversi ke Uint8Array (Lebih kompatibel dengan Web Response daripada Buffer Node)
-      const binaryString = atob(base64Data);
-      uint8Array = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        uint8Array[i] = binaryString.charCodeAt(i);
-      }
-    } else {
-      // Handling External URL
-      const response = await fetch(data.image_url);
-      const arrayBuffer = await response.arrayBuffer();
-      uint8Array = new Uint8Array(arrayBuffer);
-      contentType = response.headers.get('content-type') || 'image/jpeg';
+    // 2. Ambil data gambar menggunakan fetch
+    // fetch() di modern Node.js/Next.js mendukung 'http' dan 'data:' (Base64)
+    const imageResponse = await fetch(data.image_url);
+    
+    if (!imageResponse.ok) {
+      throw new Error('Failed to fetch image data');
     }
 
-    // Fungsi Validasi Ukuran (Optional: Memberikan peringatan jika > 1MB)
-    // Crawler WhatsApp biasanya menolak file > 1MB
-    const sizeInMB = uint8Array.length / (1024 * 1024);
-    if (sizeInMB > 1) {
-      console.warn(`OG Image for ${id} is too large: ${sizeInMB.toFixed(2)}MB. Social previews might fail.`);
-    }
+    const imageBlob = await imageResponse.blob();
+    const contentType = imageResponse.headers.get('content-type') || 'image/jpeg';
+    const contentLength = imageResponse.headers.get('content-length');
 
     // 3. Response dengan Header yang tepat untuk Crawler
-    // MENGGUNAKAN BLOB: Ini adalah cara paling standar untuk mengirim binary data dalam Response
-    // dan secara otomatis menyelesaikan error TypeScript "BodyInit"
-    const imageBlob = new Blob([uint8Array], { type: contentType });
-
+    // Menggunakan objek Blob langsung ke NextResponse adalah cara paling aman secara tipe data (Type-safe)
     return new NextResponse(imageBlob, {
       status: 200,
       headers: {
         'Content-Type': contentType,
-        'Content-Length': uint8Array.length.toString(),
+        ...(contentLength && { 'Content-Length': contentLength }),
         'Cache-Control': 'public, max-age=604800, immutable',
       },
     });
   } catch (err) {
     console.error('OG Image Proxy Error:', err);
+    // Jika terjadi error, kirim gambar default
     return NextResponse.redirect(new URL('/og-main.png', request.url));
   }
 }
