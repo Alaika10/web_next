@@ -1,11 +1,33 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { supabase } from '../lib/supabase';
 import { INITIAL_PROFILE } from '../constants';
 import { Project, BlogPost, Profile } from '../types';
+import { BarChart3, ArrowUpRight, MousePointer2 } from 'lucide-react';
 
-export const revalidate = 3600; // Cache for 1 hour to improve Time to First Byte (TTFB)
+// Placeholder SVG ringan untuk Radar Chart agar LCP/FCP cepat
+const RadarPlaceholder = () => (
+  <div className="w-full h-full flex items-center justify-center relative opacity-20">
+    <svg viewBox="0 0 100 100" className="w-full h-full animate-pulse text-indigo-500">
+      <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 2" />
+      <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 2" />
+      <circle cx="50" cy="50" r="20" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 2" />
+      <path d="M50 10 L50 90 M10 50 L90 50 M20 20 L80 80 M80 20 L20 80" stroke="currentColor" strokeWidth="0.2" />
+    </svg>
+    <div className="absolute inset-0 flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  </div>
+);
+
+const HomeRadarChart = dynamic(() => import('../components/HomeRadarChart'), { 
+  ssr: false,
+  loading: () => <RadarPlaceholder />
+});
+
+export const revalidate = 3600;
 
 export default async function HomePage() {
   let profile: Profile = INITIAL_PROFILE;
@@ -13,7 +35,6 @@ export default async function HomePage() {
   let blogs: BlogPost[] = [];
 
   if (supabase) {
-    // Parallel fetching for performance
     const [profileRes, projectsRes, blogsRes] = await Promise.all([
       supabase.from('profiles').select('*').maybeSingle(),
       supabase.from('projects').select('*').limit(2).order('created_at', { ascending: false }),
@@ -35,127 +56,167 @@ export default async function HomePage() {
     }
   }
 
-  const firstName = profile.name ? profile.name.split(' ')[0] : 'Alex';
-
   return (
-    <div className="space-y-24 py-12 px-6 md:px-12 max-w-7xl mx-auto">
-      {/* Hero Section - Optimized for LCP */}
-      <section className="flex flex-col md:flex-row items-center gap-12 pt-12 animate-in">
-        <div className="flex-1 space-y-6">
-          <span className="inline-block px-4 py-1.5 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 rounded-full text-sm font-semibold tracking-wide uppercase">Deploying Intelligence at Scale</span>
-          <h1 className="text-5xl md:text-7xl font-bold leading-tight tracking-tighter">
-            DataLab <span className="text-slate-400">by {firstName}.</span> <br/>
-            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">{profile.title}</span>
-          </h1>
-          <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
-            {profile.about}
-          </p>
-          <div className="flex flex-wrap gap-4 pt-4">
-            <Link href="/projects" className="px-8 py-3.5 bg-indigo-600 text-white rounded-2xl font-semibold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none">
-              View Neural Gallery
-            </Link>
-            <Link href="/about" className="px-8 py-3.5 border-2 border-slate-200 dark:border-slate-800 rounded-2xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
-              The Researcher
-            </Link>
-          </div>
-        </div>
-        <div className="flex-shrink-0 relative">
-          <div className="w-64 h-64 md:w-80 md:h-80 rounded-[3rem] overflow-hidden shadow-2xl z-10 relative rotate-3 hover:rotate-0 transition-transform duration-500 border-4 border-white dark:border-slate-800 bg-slate-100">
-            {profile.avatar && (
-              <Image 
-                src={profile.avatar} 
-                alt={profile.name} 
-                width={400} 
-                height={400} 
-                className="w-full h-full object-cover"
-                priority
-                fetchPriority="high"
-                loading="eager"
-                sizes="(max-width: 768px) 256px, 320px"
-              />
-            )}
-          </div>
-          <div className="absolute -bottom-6 -right-6 w-full h-full border-4 border-indigo-200 dark:border-indigo-900 rounded-[3rem] -z-0"></div>
-        </div>
-      </section>
+    <div className="relative min-h-screen overflow-x-hidden">
+      <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-[100px] -z-10"></div>
+      
+      <div className="space-y-24 py-8 px-6 md:px-12 max-w-7xl mx-auto">
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center pt-2 md:pt-6">
+          <div className="lg:col-span-7 xl:col-span-8 space-y-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-600"></span>
+              </span>
+              <span className="font-mono text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">
+                System_Status: Optimal
+              </span>
+            </div>
 
-      {/* Featured Projects */}
-      <section className="space-y-12">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-          <div className="space-y-2">
-            <h2 className="text-3xl font-bold tracking-tight">Technical Implementations</h2>
-            <p className="text-slate-500">From Computer Vision to NLP—selected neural architectures.</p>
+            <div className="space-y-3">
+              <h1 className="text-4xl md:text-6xl xl:text-7xl font-black leading-[1.1] tracking-tighter">
+                Crafting <span className="text-slate-400">Intelligence.</span> <br/>
+                <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-600 bg-clip-text text-transparent">
+                  {profile.title}
+                </span>
+              </h1>
+              <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-xl leading-relaxed font-medium">
+                {profile.about}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3 pt-2">
+              <Link href="/projects" className="group px-6 py-3.5 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
+                Explore Neural Repo <ArrowUpRight size={16} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              </Link>
+              <Link href="/about" className="px-6 py-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:border-indigo-600 transition-all">
+                Technical Dossier
+              </Link>
+            </div>
           </div>
-          <Link href="/projects" className="text-indigo-600 font-bold hover:underline flex items-center gap-2">Explore All Models <span>→</span></Link>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-          {projects.map((project) => (
-            <div key={project.id} className="group bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800 hover:shadow-2xl transition-all duration-500">
-              <div className="h-72 overflow-hidden relative bg-slate-100 dark:bg-slate-800">
-                {project.imageUrl && (
-                  <Image 
-                    src={project.imageUrl} 
-                    alt={project.title} 
-                    fill
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    className="object-cover transform group-hover:scale-105 transition-transform duration-700" 
-                    quality={75}
-                  />
-                )}
-                <div className="absolute inset-0 bg-indigo-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                  <Link href={`/projects/${project.id}`} className="bg-white text-indigo-900 px-6 py-2.5 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">Architecture Details</Link>
+
+          <div className="lg:col-span-5 xl:col-span-4 relative w-full flex items-center justify-center min-h-[380px]">
+            <div className="relative w-full max-w-[380px] aspect-square">
+              <div className="absolute inset-0 bg-indigo-600/5 rounded-full blur-[60px]"></div>
+              <div className="relative z-10 w-full h-full flex items-center justify-center animate-neural-float">
+                <HomeRadarChart skills={profile.skills} />
+              </div>
+
+              {/* Float Tags */}
+              <div className="absolute top-2 -right-4 md:-right-6 p-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-[1.5rem] border border-slate-200 dark:border-slate-800 shadow-xl hidden sm:block">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 size={12} className="text-indigo-600" />
+                    <span className="font-mono text-[8px] font-black uppercase tracking-[0.15em] text-slate-900 dark:text-white">Expertise_Mapping</span>
+                  </div>
+                  <div className="flex gap-0.5">
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <div key={i} className={`h-0.5 w-3 rounded-full ${i < 5 ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}></div>
+                    ))}
+                  </div>
                 </div>
               </div>
-              <div className="p-8 space-y-4">
-                <div className="flex flex-wrap gap-2">
-                  {project.technologies.map(tech => (
-                    <span key={tech} className="text-[10px] font-black text-indigo-600 bg-indigo-50 dark:bg-indigo-950/50 px-3 py-1 rounded-lg uppercase tracking-widest">{tech}</span>
-                  ))}
+              
+              <div className="absolute bottom-4 -left-6 p-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-[1.5rem] border border-slate-200 dark:border-slate-800 shadow-xl hidden sm:block">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-slate-900 dark:bg-white rounded-xl flex items-center justify-center text-white dark:text-slate-900">
+                    <MousePointer2 size={16} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-mono text-[7px] font-black uppercase tracking-widest text-slate-400">Status</span>
+                    <span className="font-mono text-[10px] font-black uppercase">Stable_V25</span>
+                  </div>
                 </div>
-                <h3 className="text-2xl font-bold">{project.title}</h3>
-                <p className="text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">{project.description}</p>
               </div>
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Latest Blogs */}
-      <section className="space-y-12">
-        <div className="flex justify-between items-end">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">The Data Journal</h2>
-            <p className="text-slate-500">Deep dives into algorithms and stochastic systems.</p>
           </div>
-          <Link href="/blog" className="text-indigo-600 font-bold hover:underline">Read Research →</Link>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {blogs.map(post => (
-            <div key={post.id} className="group space-y-4">
-              <div className="aspect-[16/10] rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 relative bg-slate-100 dark:bg-slate-800">
-                {post.imageUrl && (
-                  <Image 
-                    src={post.imageUrl} 
-                    alt={post.title} 
-                    fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                    className="object-cover group-hover:scale-105 transition-transform duration-500" 
-                    quality={75}
-                  />
-                )}
-              </div>
-              <div className="space-y-2">
-                <span className="text-indigo-600 font-black text-[10px] uppercase tracking-tighter">{post.date}</span>
-                <Link href={`/blog/${post.id}`}>
-                  <h3 className="text-xl font-bold group-hover:text-indigo-600 transition-colors line-clamp-2 leading-snug">{post.title}</h3>
+        </section>
+
+        <section className="space-y-10">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+            <div className="space-y-1">
+              <p className="font-mono text-[9px] uppercase text-indigo-600 font-black tracking-[0.3em]">Sector_01</p>
+              <h2 className="text-3xl md:text-4xl font-black tracking-tighter">Selected Models.</h2>
+            </div>
+            <Link href="/projects" className="group flex items-center gap-2.5 px-5 py-2.5 bg-slate-50 dark:bg-slate-900 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all">
+              Full Repository <ArrowUpRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {projects.map((project, idx) => (
+              <Link key={project.id} href={`/projects/${project.id}`} className="group relative bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden border border-slate-200 dark:border-slate-800 hover:shadow-2xl transition-all duration-700">
+                <div className="h-[350px] overflow-hidden relative bg-slate-100 dark:bg-slate-900">
+                  {project.imageUrl && (
+                    <Image 
+                      src={project.imageUrl} 
+                      alt={project.title} 
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
+                      priority={idx === 0}
+                      className="object-cover transform group-hover:scale-110 transition-transform duration-1000 grayscale group-hover:grayscale-0 opacity-80 group-hover:opacity-100" 
+                      quality={75}
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/10 to-transparent opacity-60"></div>
+                  
+                  <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end text-white">
+                    <div className="space-y-1">
+                      <div className="flex gap-1.5">
+                        {project.technologies.slice(0, 2).map(tech => (
+                          <span key={tech} className="px-2 py-0.5 bg-white/10 backdrop-blur-md rounded-lg text-[7px] font-black uppercase tracking-widest border border-white/10">{tech}</span>
+                        ))}
+                      </div>
+                      <h3 className="text-2xl font-black tracking-tighter">{project.title}</h3>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-white text-slate-900 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500">
+                      <ArrowUpRight size={20} />
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="space-y-10">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 border-b border-slate-200 dark:border-slate-800 pb-8">
+            <h2 className="text-3xl md:text-4xl font-black tracking-tighter">The Data Journal.</h2>
+            <p className="text-slate-500 text-xs max-w-[240px] font-medium text-center md:text-right">
+              Deep dives into neural architectures and large-scale data systems.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            {blogs.map(post => (
+              <article key={post.id} className="group space-y-4">
+                <Link href={`/blog/${post.id}`} className="block space-y-4">
+                  <div className="aspect-[16/11] rounded-[1.5rem] overflow-hidden border border-slate-200 dark:border-slate-800 relative bg-slate-100 dark:bg-slate-800 shadow-sm transition-all duration-500 group-hover:shadow-lg">
+                    {post.imageUrl && (
+                      <Image 
+                        src={post.imageUrl} 
+                        alt={post.title} 
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        className="object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" 
+                        quality={70}
+                      />
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-[1px] bg-indigo-600"></span>
+                      <span className="font-mono text-[8px] text-indigo-600 font-black uppercase tracking-widest">{post.date}</span>
+                    </div>
+                    <h3 className="text-lg font-black tracking-tight leading-snug group-hover:text-indigo-600 transition-colors">{post.title}</h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed line-clamp-2">{post.excerpt}</p>
+                  </div>
                 </Link>
-                <p className="text-slate-500 text-sm line-clamp-2">{post.excerpt}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+              </article>
+            ))}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

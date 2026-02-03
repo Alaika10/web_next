@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { supabase } from '../../lib/supabase';
-import { BookOpen, Clock, Zap, Share2, Search, Star } from 'lucide-react';
+import { BookOpen, Clock, Zap, Star } from 'lucide-react';
 import { BlogPost } from '../../types';
 
 export const revalidate = 60;
@@ -56,6 +56,7 @@ export default async function BlogPage() {
                       src={featuredPost.imageUrl} 
                       alt={featuredPost.title} 
                       fill
+                      sizes="100vw"
                       className="object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 scale-105 group-hover:scale-100"
                       priority
                     />
