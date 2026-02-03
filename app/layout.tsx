@@ -6,16 +6,16 @@ import Footer from '../components/Footer';
 import dynamic from 'next/dynamic';
 import './globals.css';
 
-// Memastikan analytics tidak menghambat rendering awal
 const VercelAnalytics = dynamic(() => import('../components/VercelAnalytics'), { 
   ssr: false 
 });
 
 const inter = Inter({ 
   subsets: ['latin'],
-  display: 'swap', // Mempercepat rendering teks awal
+  display: 'swap',
   variable: '--font-inter',
   preload: true,
+  // Using adjustFontFallback to prevent layout shifts
   adjustFontFallback: true,
 });
 
@@ -26,14 +26,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'DataLab | AI & Machine Learning Portfolio',
-  description: 'Building intelligent systems with rigor and precision. Portfolio and research journal of Alex Sterling.',
+  title: 'DataLab | AI & ML Portfolio',
+  description: 'Building intelligent systems with rigor and precision.',
   metadataBase: new URL('https://datalab.alex.studio'),
-  openGraph: {
-    title: 'DataLab | AI & Machine Learning Portfolio',
-    description: 'Specialized in turning high-dimensional data into predictive power.',
-    type: 'website',
-  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -45,7 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="data-grid-bg font-sans bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 transition-colors duration-300 antialiased">
         <Navbar />
-        <main className="flex-grow pt-20 min-h-screen">
+        <main className="flex-grow pt-20 min-h-screen relative z-10">
           {children}
         </main>
         <Footer />
