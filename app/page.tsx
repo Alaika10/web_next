@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import { supabase } from '../lib/supabase';
 import { INITIAL_PROFILE } from '../constants';
 import { Project, BlogPost, Profile, Certification } from '../types';
-import { ArrowUpRight, Award, ShieldCheck, ChevronRight } from 'lucide-react';
+import { ArrowUpRight, Award, ShieldCheck, ChevronRight, Activity } from 'lucide-react';
 import Skeleton from '../components/Skeleton';
 
 // Radar chart adalah komponen berat, tetap dynamic namun lebih ringan
@@ -15,12 +15,19 @@ const HomeRadarChart = dynamic(() => import('../components/HomeRadarChart'), {
   loading: () => <div className="w-full h-full flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-full animate-pulse"></div>
 });
 
-export const revalidate = 3600;
+// Menurunkan revalidate menjadi 60 detik untuk sinkronisasi yang lebih cepat dari CMS
+export const revalidate = 60;
 
 async function ProjectsSection() {
   let projects: Project[] = [];
   if (supabase) {
-    const { data } = await supabase.from('projects').select('*').limit(2).order('created_at', { ascending: false });
+    // Optimasi: Hanya pilih kolom yang dibutuhkan untuk preview beranda
+    const { data } = await supabase
+      .from('projects')
+      .select('id, title, description, image_url, created_at')
+      .limit(2)
+      .order('created_at', { ascending: false });
+    
     if (data) projects = data.map((p: any) => ({ ...p, imageUrl: p.image_url }));
   }
 
@@ -55,7 +62,12 @@ async function ProjectsSection() {
 async function BlogSection() {
   let blogs: BlogPost[] = [];
   if (supabase) {
-    const { data } = await supabase.from('blogs').select('*').limit(3).order('date', { ascending: false });
+    const { data } = await supabase
+      .from('blogs')
+      .select('id, title, excerpt, date, image_url')
+      .limit(3)
+      .order('date', { ascending: false });
+    
     if (data) blogs = data.map((item: any) => ({ ...item, imageUrl: item.image_url }));
   }
 
@@ -77,7 +89,10 @@ async function BlogSection() {
               )}
             </div>
             <div className="space-y-2">
-              <span className="font-mono text-[8px] text-indigo-600 font-black uppercase tracking-widest">{post.date}</span>
+              <div className="flex items-center gap-2">
+                 <span className="font-mono text-[8px] text-indigo-600 font-black uppercase tracking-widest">{post.date}</span>
+                 <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800/50"></div>
+              </div>
               <h3 className="text-lg font-black tracking-tight leading-snug group-hover:text-indigo-600 transition-colors">{post.title}</h3>
             </div>
           </Link>
@@ -90,7 +105,12 @@ async function BlogSection() {
 async function CertificationsHomeSection() {
   let certs: Certification[] = [];
   if (supabase) {
-    const { data } = await supabase.from('certifications').select('*').limit(3).order('issue_date', { ascending: false });
+    const { data } = await supabase
+      .from('certifications')
+      .select('id, title, issuer, image_url, issue_date')
+      .limit(3)
+      .order('issue_date', { ascending: false });
+    
     if (data) certs = data.map((c: any) => ({ ...c, imageUrl: c.image_url }));
   }
 
@@ -100,6 +120,9 @@ async function CertificationsHomeSection() {
     <section className="space-y-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div className="space-y-2">
+          <div className="flex items-center gap-2 text-indigo-600 font-mono text-[9px] uppercase tracking-widest font-black">
+            <Activity size={12} className="animate-pulse" /> Live_Sync: Active
+          </div>
           <h2 className="text-3xl md:text-4xl font-black tracking-tighter">Verified Authority.</h2>
           <p className="text-slate-500 text-sm font-medium">Cryptographically verifiable technical credentials.</p>
         </div>
@@ -148,9 +171,10 @@ export default async function HomePage() {
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm">
               <span className="flex h-2 w-2">
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-600"></span>
+                <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-indigo-400 opacity-75"></span>
               </span>
               <span className="font-mono text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">
-                System_Status: Online
+                Data_Link: Established / Sync_Interval: 60s
               </span>
             </div>
 
@@ -193,7 +217,7 @@ export default async function HomePage() {
           </Suspense>
         </section>
 
-        {/* NEW: CERTIFICATIONS SECTION */}
+        {/* CERTIFICATIONS SECTION */}
         <Suspense fallback={<div className="grid grid-cols-1 md:grid-cols-3 gap-8"><Skeleton className="h-40" /><Skeleton className="h-40" /><Skeleton className="h-40" /></div>}>
           <CertificationsHomeSection />
         </Suspense>
