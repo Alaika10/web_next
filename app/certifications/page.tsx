@@ -2,10 +2,10 @@ import React, { Suspense } from 'react';
 import Image from 'next/image';
 import { supabase } from '../../lib/supabase';
 import { Certification } from '../../types';
-import { Award, ExternalLink, ShieldCheck, Database } from 'lucide-react';
+import { Award, ExternalLink, ShieldCheck, Database, FileText } from 'lucide-react';
 import Skeleton from '../../components/Skeleton';
 
-export const revalidate = 3600;
+export const revalidate = 60; // Dipercepat menjadi 60 detik agar sinkronisasi lebih terasa
 
 async function CertificationList() {
   let certs: Certification[] = [];
@@ -33,11 +33,11 @@ async function CertificationList() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {certs.map((cert) => (
-        <div key={cert.id} className="group relative bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 border border-slate-200 dark:border-slate-800 hover:shadow-2xl transition-all duration-500 overflow-hidden">
+        <div key={cert.id} className="group relative bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 border border-slate-200 dark:border-slate-800 hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col h-full">
           {/* Subtle background decoration */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl -translate-y-16 translate-x-16"></div>
           
-          <div className="relative space-y-6">
+          <div className="relative space-y-6 flex-grow">
             <div className="flex justify-between items-start">
               <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center p-2 border border-slate-100 dark:border-slate-700 shadow-sm transition-transform group-hover:rotate-6">
                 {cert.imageUrl ? (
@@ -62,7 +62,15 @@ async function CertificationList() {
               </p>
             </div>
 
-            {cert.credentialUrl && (
+            {cert.description && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed border-l-2 border-slate-100 dark:border-slate-800 pl-4 py-1 italic">
+                {cert.description}
+              </p>
+            )}
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
+            {cert.credentialUrl ? (
               <a 
                 href={cert.credentialUrl} 
                 target="_blank" 
@@ -71,6 +79,8 @@ async function CertificationList() {
               >
                 Inspect Credentials <ExternalLink size={14} />
               </a>
+            ) : (
+              <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Internal Accreditation</span>
             )}
           </div>
         </div>

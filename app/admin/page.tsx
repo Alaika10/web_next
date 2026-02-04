@@ -48,10 +48,10 @@ export default function AdminPage() {
         if (p) setProfile(p);
         
         const { data: projs } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
-        if (projs) setProjects(projs || []);
+        if (projs) setProjects(projs.map(p => ({ ...p, imageUrl: p.image_url })));
         
         const { data: b } = await supabase.from('blogs').select('*').order('date', { ascending: false });
-        if (b) setBlogs(b || []);
+        if (b) setBlogs(b.map(item => ({ ...item, imageUrl: item.image_url })));
 
         const { data: certs } = await supabase.from('certifications').select('*').order('issue_date', { ascending: false });
         if (certs) setCertifications(certs.map(c => ({
@@ -118,18 +118,34 @@ export default function AdminPage() {
     setIsSaving(true);
     try {
       const dbUpdates = { ...updates };
-      // Normalisasi snake_case
-      if (updates.imageUrl) { dbUpdates.image_url = updates.imageUrl; delete dbUpdates.imageUrl; }
-      if (updates.issueDate) { dbUpdates.issue_date = updates.issueDate; delete dbUpdates.issueDate; }
-      if (updates.credentialUrl) { dbUpdates.credential_url = updates.credentialUrl; delete dbUpdates.credentialUrl; }
+      // Normalisasi snake_case untuk DB
+      if (updates.imageUrl) { dbUpdates.image_url = updates.imageUrl; }
+      if (updates.issueDate) { dbUpdates.issue_date = updates.issueDate; }
+      if (updates.credentialUrl) { dbUpdates.credential_url = updates.credentialUrl; }
       
-      await supabase.from(table).update(dbUpdates).eq('id', id);
+      // Hapus camelCase sebelum dikirim ke DB agar tidak error
+      delete dbUpdates.imageUrl;
+      delete dbUpdates.issueDate;
+      delete dbUpdates.credentialUrl;
+
+      const { error } = await supabase.from(table).update(dbUpdates).eq('id', id);
+      if (error) throw error;
+
+      // Update state lokal agar UI langsung sinkron
+      if (table === 'certifications') {
+        setCertifications(certifications.map(c => c.id === id ? { ...c, ...updates } : c));
+      } else if (table === 'projects') {
+        setProjects(projects.map(p => p.id === id ? { ...p, ...updates } : p));
+      } else if (table === 'blogs') {
+        setBlogs(blogs.map(b => b.id === id ? { ...b, ...updates } : b));
+      }
+    } catch (err) {
+      console.error("Update failed:", err);
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Profile saving logic (existing)...
   const saveProfile = async () => {
     if (!supabase) return;
     setIsSaving(true);
@@ -167,17 +183,11 @@ export default function AdminPage() {
           activeTab={activeTab}
           isSupabase={isSupabase}
           isSaving={isSaving}
-          onAddProject={() => {}} // functions inside AdminHeader need props
+          onAddProject={() => {}} 
           onAddBlog={() => {}} 
           onSaveProfile={saveProfile}
-          // Custom handlers
           onAddCertification={addCertification}
         />
-
-        {/* Tab Switcher - Logic manual sementara untuk tombol di header */}
-        <div className="hidden">
-           {/* Karena AdminHeader lama tidak punya prop onAddCertification, kita perlu override di page ini */}
-        </div>
 
         {activeTab === DashboardTab.OVERVIEW && <OverviewTab projects={projects} blogs={blogs} onExploreJournal={() => setActiveTab(DashboardTab.BLOGS)} />}
         {activeTab === DashboardTab.PROJECTS && (

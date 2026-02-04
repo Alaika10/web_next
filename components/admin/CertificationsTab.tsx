@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { Trash2, ExternalLink, Award, Calendar, Link as LinkIcon, Building } from 'lucide-react';
+import { Trash2, ExternalLink, Award, Calendar, Link as LinkIcon, Building, FileText } from 'lucide-react';
 import { Certification } from '../../types';
 
 interface CertsTabProps {
@@ -25,17 +25,17 @@ export default function CertificationsTab({ certs, onUpdate, onDelete, onAdd }: 
         <div key={cert.id} className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm p-8 group">
           <div className="flex flex-col lg:flex-row gap-10">
             <div className="w-full lg:w-48 space-y-4">
-              <div className="aspect-square rounded-2xl overflow-hidden border border-slate-100 relative bg-slate-50 flex items-center justify-center">
+              <div className="aspect-square rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 relative bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
                 {cert.imageUrl ? (
                   <img src={cert.imageUrl} className="w-full h-full object-contain p-4" alt={cert.title} />
                 ) : (
-                  <Award size={40} className="text-slate-300" />
+                  <Award size={40} className="text-slate-300 dark:text-slate-600" />
                 )}
               </div>
               <div className="space-y-2">
-                <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Icon URL</label>
+                <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Icon/Logo URL</label>
                 <input 
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl text-[10px] outline-none"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl text-[10px] border border-transparent focus:border-indigo-600 outline-none"
                   defaultValue={cert.imageUrl}
                   onBlur={(e) => onUpdate(cert.id, { imageUrl: e.target.value })}
                 />
@@ -46,7 +46,7 @@ export default function CertificationsTab({ certs, onUpdate, onDelete, onAdd }: 
               <div className="flex justify-between items-start gap-4">
                 <div className="flex-1">
                   <input 
-                    className="text-2xl font-black bg-transparent border-none focus:ring-0 w-full p-0 placeholder:text-slate-300"
+                    className="text-2xl font-black bg-transparent border-none focus:ring-0 w-full p-0 placeholder:text-slate-300 dark:text-white"
                     defaultValue={cert.title}
                     onBlur={(e) => onUpdate(cert.id, { title: e.target.value })}
                     placeholder="Credential Title"
@@ -63,7 +63,7 @@ export default function CertificationsTab({ certs, onUpdate, onDelete, onAdd }: 
                     <Building size={12}/> Issuing Organization
                   </label>
                   <input 
-                    className="w-full bg-slate-50 dark:bg-slate-800/50 rounded-xl px-4 py-3 text-xs font-bold border-none outline-none focus:ring-1 focus:ring-indigo-600 transition-all"
+                    className="w-full bg-slate-50 dark:bg-slate-800/50 rounded-xl px-4 py-3 text-xs font-bold border-none outline-none focus:ring-1 focus:ring-indigo-600 transition-all dark:text-slate-200"
                     defaultValue={cert.issuer}
                     onBlur={(e) => onUpdate(cert.id, { issuer: e.target.value })}
                   />
@@ -74,7 +74,7 @@ export default function CertificationsTab({ certs, onUpdate, onDelete, onAdd }: 
                   </label>
                   <input 
                     type="date"
-                    className="w-full bg-slate-50 dark:bg-slate-800/50 rounded-xl px-4 py-3 text-xs font-bold border-none outline-none focus:ring-1 focus:ring-indigo-600 transition-all"
+                    className="w-full bg-slate-50 dark:bg-slate-800/50 rounded-xl px-4 py-3 text-xs font-bold border-none outline-none focus:ring-1 focus:ring-indigo-600 transition-all dark:text-slate-200"
                     defaultValue={cert.issueDate}
                     onBlur={(e) => onUpdate(cert.id, { issueDate: e.target.value })}
                   />
@@ -84,10 +84,21 @@ export default function CertificationsTab({ certs, onUpdate, onDelete, onAdd }: 
                     <LinkIcon size={12}/> Credential URL / Verification Link
                   </label>
                   <input 
-                    className="w-full bg-slate-50 dark:bg-slate-800/50 rounded-xl px-4 py-3 text-xs font-bold border-none outline-none focus:ring-1 focus:ring-indigo-600 transition-all"
+                    className="w-full bg-slate-50 dark:bg-slate-800/50 rounded-xl px-4 py-3 text-xs font-bold border-none outline-none focus:ring-1 focus:ring-indigo-600 transition-all dark:text-slate-200"
                     defaultValue={cert.credentialUrl}
                     onBlur={(e) => onUpdate(cert.id, { credentialUrl: e.target.value })}
                     placeholder="https://..."
+                  />
+                </div>
+                <div className="md:col-span-2 space-y-2">
+                  <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
+                    <FileText size={12}/> Key Skills / Description
+                  </label>
+                  <textarea 
+                    className="w-full bg-slate-50 dark:bg-slate-800/50 rounded-xl px-4 py-3 text-xs font-medium border-none outline-none focus:ring-1 focus:ring-indigo-600 transition-all dark:text-slate-200 h-24"
+                    defaultValue={cert.description}
+                    onBlur={(e) => onUpdate(cert.id, { description: e.target.value })}
+                    placeholder="Describe the certification or skills acquired..."
                   />
                 </div>
               </div>
