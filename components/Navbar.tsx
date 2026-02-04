@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { isAuthenticated } from '../lib/auth';
-import { LayoutDashboard, User as UserIcon, Menu, X, Globe, ChevronRight, ArrowRight, Github } from 'lucide-react';
+import { LayoutDashboard, User as UserIcon, Menu, X, Globe, ChevronRight, ArrowRight, Github, Award } from 'lucide-react';
 
 const Navbar: React.FC = () => {
   const pathname = usePathname();
@@ -55,6 +55,7 @@ const Navbar: React.FC = () => {
     { name: 'Projects', path: '/projects' },
     { name: 'Blog', path: '/blog' },
     { name: 'GitHub', path: '/github' },
+    { name: 'Certifications', path: '/certifications' },
     { name: 'About', path: '/about' },
   ];
 
@@ -182,7 +183,7 @@ const Navbar: React.FC = () => {
                   </Link>
                 )
               )}
-              <Link href="https://github.com/Alaika10" className="p-6 bg-slate-50 dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 active:scale-95 transition-transform group shadow-sm">
+              <Link href="/github" className="p-6 bg-slate-50 dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 active:scale-95 transition-transform group shadow-sm">
                 <Github className="text-slate-400 dark:text-slate-500 mb-2 group-hover:scale-110 transition-transform" size={24} />
                 <p className="font-black text-xs uppercase tracking-widest text-slate-900 dark:text-slate-200">Open Source</p>
               </Link>

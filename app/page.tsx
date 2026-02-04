@@ -1,11 +1,12 @@
+
 import React, { Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { supabase } from '../lib/supabase';
 import { INITIAL_PROFILE } from '../constants';
-import { Project, BlogPost, Profile } from '../types';
-import { ArrowUpRight } from 'lucide-react';
+import { Project, BlogPost, Profile, Certification } from '../types';
+import { ArrowUpRight, Award, ShieldCheck, ChevronRight } from 'lucide-react';
 import Skeleton from '../components/Skeleton';
 
 // Radar chart adalah komponen berat, tetap dynamic namun lebih ringan
@@ -16,7 +17,6 @@ const HomeRadarChart = dynamic(() => import('../components/HomeRadarChart'), {
 
 export const revalidate = 3600;
 
-// Sub-komponen untuk data dinamis agar bisa di-stream
 async function ProjectsSection() {
   let projects: Project[] = [];
   if (supabase) {
@@ -35,10 +35,7 @@ async function ProjectsSection() {
                 alt={project.title} 
                 fill
                 sizes="(max-width: 768px) 100vw, 600px"
-                // Hanya gambar pertama yang diberi priority tinggi untuk LCP
                 priority={idx === 0}
-                // @ts-ignore - fetchPriority didukung oleh React 19/Next 14 di browser modern
-                fetchPriority={idx === 0 ? "high" : "auto"}
                 className="object-cover transform group-hover:scale-105 transition-transform duration-700 grayscale group-hover:grayscale-0 opacity-90 group-hover:opacity-100" 
                 quality={75}
               />
@@ -90,6 +87,51 @@ async function BlogSection() {
   );
 }
 
+async function CertificationsHomeSection() {
+  let certs: Certification[] = [];
+  if (supabase) {
+    const { data } = await supabase.from('certifications').select('*').limit(3).order('issue_date', { ascending: false });
+    if (data) certs = data.map((c: any) => ({ ...c, imageUrl: c.image_url }));
+  }
+
+  if (certs.length === 0) return null;
+
+  return (
+    <section className="space-y-10">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        <div className="space-y-2">
+          <h2 className="text-3xl md:text-4xl font-black tracking-tighter">Verified Authority.</h2>
+          <p className="text-slate-500 text-sm font-medium">Cryptographically verifiable technical credentials.</p>
+        </div>
+        <Link href="/certifications" className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:underline">
+          Access Full Vault
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {certs.map((cert) => (
+          <div key={cert.id} className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] hover:shadow-xl transition-all group flex flex-col gap-4">
+            <div className="flex justify-between items-start">
+              <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center p-2 group-hover:rotate-6 transition-transform">
+                {cert.imageUrl ? (
+                  <img src={cert.imageUrl} alt={cert.issuer} className="w-full h-full object-contain" />
+                ) : (
+                  <Award className="text-indigo-600" size={24} />
+                )}
+              </div>
+              <ShieldCheck className="text-emerald-500" size={18} />
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-black text-base line-clamp-1">{cert.title}</h3>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{cert.issuer}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default async function HomePage() {
   let profile: Profile = INITIAL_PROFILE;
   if (supabase) {
@@ -99,8 +141,8 @@ export default async function HomePage() {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden">
-      <div className="space-y-24 py-8 px-6 md:px-12 max-w-7xl mx-auto">
-        {/* HERO SECTION - Rendered Immediately */}
+      <div className="space-y-24 py-8 px-6 md:px-12 max-w-7xl mx-auto pb-24">
+        {/* HERO SECTION */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center pt-2 md:pt-6">
           <div className="lg:col-span-7 xl:col-span-8 space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -138,7 +180,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* PROJECTS SECTION - Streamed */}
+        {/* PROJECTS SECTION */}
         <section className="space-y-10">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
             <h2 className="text-3xl md:text-4xl font-black tracking-tighter">Selected Models.</h2>
@@ -151,7 +193,12 @@ export default async function HomePage() {
           </Suspense>
         </section>
 
-        {/* BLOG SECTION - Streamed */}
+        {/* NEW: CERTIFICATIONS SECTION */}
+        <Suspense fallback={<div className="grid grid-cols-1 md:grid-cols-3 gap-8"><Skeleton className="h-40" /><Skeleton className="h-40" /><Skeleton className="h-40" /></div>}>
+          <CertificationsHomeSection />
+        </Suspense>
+
+        {/* BLOG SECTION */}
         <section className="space-y-10">
           <div className="border-b border-slate-200 dark:border-slate-800 pb-8">
             <h2 className="text-3xl md:text-4xl font-black tracking-tighter">The Data Journal.</h2>
