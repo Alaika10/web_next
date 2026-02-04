@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { LayoutDashboard, Briefcase, FileText, User, Globe, LogOut, Zap, Atom } from 'lucide-react';
+import { LayoutDashboard, Briefcase, FileText, User, Globe, LogOut, Zap, Atom, Award } from 'lucide-react';
 import { DashboardTab } from '../../types';
 import { logoutAdmin } from '../../lib/auth';
 
@@ -31,40 +31,32 @@ export default function AdminSidebar({ activeTab, onTabChange, isOpen }: Sidebar
 
   return (
     <aside className={`fixed inset-y-0 left-0 z-[70] w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col transition-transform duration-300 lg:static lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-      <div className="p-8 pb-4">
-        {/* BRAND LOGO SECTION */}
+      <div className="p-8 pb-4 flex-1">
         <div className="relative mb-12 p-6 bg-slate-900 rounded-[2.5rem] overflow-hidden group shadow-2xl shadow-indigo-100 dark:shadow-none">
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-600 rounded-full blur-[60px] opacity-40 -translate-y-10 translate-x-10 group-hover:scale-150 transition-transform duration-1000"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-violet-600 rounded-full blur-[50px] opacity-30 translate-y-10 -translate-x-10"></div>
-          
           <div className="relative z-10 flex flex-col items-center text-center gap-4">
             <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center shadow-2xl transform group-hover:rotate-[360deg] transition-transform duration-[1.5s] ease-in-out">
               <Atom className="text-indigo-600" size={32} strokeWidth={2.5} />
             </div>
             <div>
               <p className="text-white font-black text-lg tracking-tighter uppercase mb-0.5">DataLabs <span className="text-indigo-400">Console</span></p>
-              <div className="flex items-center justify-center gap-1.5">
-                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.2em]">Core v1.0</p>
-              </div>
             </div>
           </div>
         </div>
 
-        {/* NAVIGATION TAB SECTION */}
-        <div className="space-y-2">
+        <div className="space-y-2 overflow-y-auto">
           <p className="px-5 mb-4 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Menu Navigation</p>
           <nav className="space-y-1">
             <NavItem tab={DashboardTab.OVERVIEW} icon={<LayoutDashboard size={18}/>} label="Analytics" />
             <NavItem tab={DashboardTab.PROJECTS} icon={<Briefcase size={18}/>} label="Model Zoo" />
             <NavItem tab={DashboardTab.BLOGS} icon={<FileText size={18}/>} label="Research Notes" />
+            <NavItem tab={DashboardTab.CERTIFICATIONS} icon={<Award size={18}/>} label="Credentials" />
             <NavItem tab={DashboardTab.PROFILE} icon={<User size={18}/>} label="Lab Profile" />
           </nav>
         </div>
       </div>
 
-      {/* FOOTER SECTION */}
-      <div className="mt-auto p-8 border-t border-slate-100 dark:border-slate-800 space-y-4 bg-slate-50/50 dark:bg-slate-900/50">
+      <div className="p-8 border-t border-slate-100 dark:border-slate-800 space-y-4 bg-slate-50/50 dark:bg-slate-900/50">
         <Link href="/" className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors group">
           <Globe size={18} className="group-hover:rotate-12 transition-transform" /> View Public Site
         </Link>

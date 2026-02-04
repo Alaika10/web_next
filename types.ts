@@ -24,6 +24,16 @@ export interface BlogPost {
   isTrending?: boolean;
 }
 
+export interface Certification {
+  id: string;
+  title: string;
+  issuer: string;
+  issueDate: string;
+  imageUrl: string;
+  credentialUrl: string;
+  description: string;
+}
+
 export interface Skill {
   name: string;
   level: number;
@@ -56,5 +66,6 @@ export enum DashboardTab {
   OVERVIEW = 'Overview',
   PROJECTS = 'Projects',
   BLOGS = 'Blogs',
+  CERTIFICATIONS = 'Certifications',
   PROFILE = 'Profile'
 }

@@ -53,6 +53,7 @@ const Navbar: React.FC = () => {
     { name: 'Home', path: '/' },
     { name: 'Projects', path: '/projects' },
     { name: 'Blog', path: '/blog' },
+    { name: 'Certifications', path: '/certifications' },
     { name: 'About', path: '/about' },
   ];
 
@@ -184,17 +185,6 @@ const Navbar: React.FC = () => {
                 <Globe className="text-slate-400 dark:text-slate-500 mb-2 group-hover:scale-110 transition-transform" size={24} />
                 <p className="font-black text-xs uppercase tracking-widest text-slate-900 dark:text-slate-200">Open Source</p>
               </Link>
-            </div>
-            
-            <div className="flex justify-between items-center px-2 pt-6 border-t border-slate-200 dark:border-slate-800">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                Alex Sterling / Lab.v25
-              </p>
-              <div className="flex gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400 animate-pulse"></div>
-                <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 dark:bg-indigo-600 animate-pulse delay-75"></div>
-                <div className="w-1.5 h-1.5 rounded-full bg-indigo-200 dark:bg-indigo-800 animate-pulse delay-150"></div>
-              </div>
             </div>
           </div>
         </div>
