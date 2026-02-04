@@ -2,11 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Profile, Project, BlogPost, Certification, DashboardTab } from '../../types';
-import { generateBlogDraft, generateProjectDescription } from '../../services/geminiService';
 import { supabase } from '../../lib/supabase';
 import { INITIAL_PROFILE } from '../../constants';
 import { isAuthenticated } from '../../lib/auth';
-import { Menu } from 'lucide-react';
+import { Menu, Terminal } from 'lucide-react';
 
 // Import Modular Components
 import AdminSidebar from '../../components/admin/AdminSidebar';
@@ -85,12 +84,10 @@ export default function AdminPage() {
         technologies: ["Python"],
         image_url: ""
       }]).select('*').single();
-
       if (error) throw error;
       if (data) setProjects([{ ...data, imageUrl: data.image_url }, ...projects]);
-    } catch (err) {
-      alert("Failed to create project record.");
-    } finally { setIsSaving(false); }
+    } catch (err) { alert("Failed to create project."); } 
+    finally { setIsSaving(false); }
   };
 
   const addBlog = async () => {
@@ -99,7 +96,7 @@ export default function AdminPage() {
     try {
       const { data, error } = await supabase.from('blogs').insert([{
         title: "New Research Entry",
-        excerpt: "Brief summary of the findings...",
+        excerpt: "Brief summary...",
         content: "# New Article",
         author: profile.name,
         date: new Date().toISOString().split('T')[0],
@@ -107,12 +104,10 @@ export default function AdminPage() {
         is_headline: false,
         is_trending: false
       }]).select('*').single();
-
       if (error) throw error;
       if (data) setBlogs([{ ...data, imageUrl: data.image_url }, ...blogs]);
-    } catch (err) {
-      alert("Failed to create blog record.");
-    } finally { setIsSaving(false); }
+    } catch (err) { alert("Failed to create blog."); }
+    finally { setIsSaving(false); }
   };
 
   const addCertification = async () => {
@@ -127,39 +122,30 @@ export default function AdminPage() {
         credential_url: "",
         description: ""
       }]).select('*').single();
-
       if (error) throw error;
       if (data) {
-        const newCert: Certification = {
+        setCertifications([{
           ...data,
           issueDate: data.issue_date,
           imageUrl: data.image_url,
           credentialUrl: data.credential_url
-        };
-        setCertifications([newCert, ...certifications]);
+        }, ...certifications]);
       }
-    } catch (err) {
-      alert("Error creating credential node.");
-    } finally {
-      setIsSaving(false);
-    }
+    } catch (err) { alert("Error creating credential."); }
+    finally { setIsSaving(false); }
   };
 
   const toggleBlogFeature = async (id: string, type: 'isHeadline' | 'isTrending') => {
     if (!supabase) return;
     const post = blogs.find(b => b.id === id);
     if (!post) return;
-
     const newValue = !post[type];
     const dbField = type === 'isHeadline' ? 'is_headline' : 'is_trending';
-
     try {
       const { error } = await supabase.from('blogs').update({ [dbField]: newValue }).eq('id', id);
       if (error) throw error;
       setBlogs(blogs.map(b => b.id === id ? { ...b, [type]: newValue } : b));
-    } catch (err) {
-      console.error("Feature toggle failed");
-    }
+    } catch (err) { console.error("Feature toggle failed"); }
   };
 
   const deleteItem = async (table: string, id: string) => {
@@ -170,9 +156,7 @@ export default function AdminPage() {
       if (table === 'projects') setProjects(projects.filter(p => p.id !== id));
       else if (table === 'blogs') setBlogs(blogs.filter(b => b.id !== id));
       else if (table === 'certifications') setCertifications(certifications.filter(c => c.id !== id));
-    } finally {
-      setIsSaving(false);
-    }
+    } finally { setIsSaving(false); }
   };
 
   const updateItem = async (table: string, id: string, updates: any) => {
@@ -183,22 +167,12 @@ export default function AdminPage() {
       if (updates.imageUrl !== undefined) { dbUpdates.image_url = updates.imageUrl; delete dbUpdates.imageUrl; }
       if (updates.issueDate !== undefined) { dbUpdates.issue_date = updates.issueDate; delete dbUpdates.issueDate; }
       if (updates.credentialUrl !== undefined) { dbUpdates.credential_url = updates.credentialUrl; delete dbUpdates.credentialUrl; }
-
       const { error } = await supabase.from(table).update(dbUpdates).eq('id', id);
       if (error) throw error;
-
-      if (table === 'certifications') {
-        setCertifications(certifications.map(c => c.id === id ? { ...c, ...updates } : c));
-      } else if (table === 'projects') {
-        setProjects(projects.map(p => p.id === id ? { ...p, ...updates } : p));
-      } else if (table === 'blogs') {
-        setBlogs(blogs.map(b => b.id === id ? { ...b, ...updates } : b));
-      }
-    } catch (err) {
-      console.error("Update failed:", err);
-    } finally {
-      setIsSaving(false);
-    }
+      if (table === 'certifications') setCertifications(certifications.map(c => c.id === id ? { ...c, ...updates } : c));
+      else if (table === 'projects') setProjects(projects.map(p => p.id === id ? { ...p, ...updates } : p));
+      else if (table === 'blogs') setBlogs(blogs.map(b => b.id === id ? { ...b, ...updates } : b));
+    } finally { setIsSaving(false); }
   };
 
   const saveProfile = async () => {
@@ -206,17 +180,17 @@ export default function AdminPage() {
     setIsSaving(true);
     try {
       const { error } = await supabase.from('profiles').upsert({
-        ...profile,
-        updated_at: new Date().toISOString()
+        ...profile, updated_at: new Date().toISOString()
       }, { onConflict: 'id' });
       if (error) throw error;
       setSaveStatus('success');
       setTimeout(() => setSaveStatus('idle'), 3000);
-    } catch (err) {
-      setSaveStatus('error');
-    } finally {
-      setIsSaving(false);
-    }
+    } catch (err) { setSaveStatus('error'); }
+    finally { setIsSaving(false); }
+  };
+
+  const handleTabChange = (tab: DashboardTab) => {
+    setActiveTab(tab);
   };
 
   if (loading) return (
@@ -226,36 +200,64 @@ export default function AdminPage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col lg:flex-row text-slate-900 dark:text-slate-100">
-      <div className="lg:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-900 border-b">
-        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2"><Menu /></button>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex overflow-hidden">
+      
+      {/* Dynamic Sidebar */}
+      <AdminSidebar 
+        activeTab={activeTab} 
+        onTabChange={handleTabChange} 
+        isOpen={isSidebarOpen} 
+        onClose={() => setIsSidebarOpen(false)} 
+      />
+
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+        
+        {/* Mobile Navbar - Only visible on small screens */}
+        <div className="lg:hidden flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-50">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
+              <Terminal size={16} />
+            </div>
+            <span className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-white">Console</span>
+          </div>
+          <button 
+            onClick={() => setIsSidebarOpen(true)} 
+            className="p-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-600 dark:text-slate-300"
+          >
+            <Menu size={20} />
+          </button>
+        </div>
+
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-y-auto p-6 md:p-10 lg:p-14 custom-scrollbar">
+          <div className="max-w-6xl mx-auto space-y-12">
+            
+            <AdminHeader 
+              activeTab={activeTab}
+              isSupabase={isSupabase}
+              isSaving={isSaving}
+              onAddProject={addProject} 
+              onAddBlog={addBlog} 
+              onSaveProfile={saveProfile}
+              onAddCertification={addCertification}
+            />
+
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+              {activeTab === DashboardTab.OVERVIEW && <OverviewTab projects={projects} blogs={blogs} onExploreJournal={() => setActiveTab(DashboardTab.BLOGS)} />}
+              {activeTab === DashboardTab.PROJECTS && (
+                <ProjectsTab projects={projects} isAiLoading={isAiLoading} onUpdate={(id, up) => updateItem('projects', id, up)} onDelete={(id) => deleteItem('projects', id)} onAiRefine={() => {}} />
+              )}
+              {activeTab === DashboardTab.BLOGS && (
+                <JournalTab blogs={blogs} isAiLoading={isAiLoading} onUpdate={(id, up) => updateItem('blogs', id, up)} onDelete={(id) => deleteItem('blogs', id)} onAiRefine={() => {}} onToggleFeature={toggleBlogFeature} />
+              )}
+              {activeTab === DashboardTab.CERTIFICATIONS && (
+                <CertificationsTab certs={certifications} onUpdate={(id, up) => updateItem('certifications', id, up)} onDelete={(id) => deleteItem('certifications', id)} onAdd={addCertification} />
+              )}
+              {activeTab === DashboardTab.PROFILE && <ProfileTab profile={profile} onProfileChange={(up) => setProfile({ ...profile, ...up })} />}
+            </div>
+          </div>
+        </main>
       </div>
-
-      <AdminSidebar activeTab={activeTab} onTabChange={(tab) => { setActiveTab(tab); setIsSidebarOpen(false); }} isOpen={isSidebarOpen} />
-
-      <main className="flex-1 overflow-y-auto h-screen p-6 md:p-12 relative">
-        <AdminHeader 
-          activeTab={activeTab}
-          isSupabase={isSupabase}
-          isSaving={isSaving}
-          onAddProject={addProject} 
-          onAddBlog={addBlog} 
-          onSaveProfile={saveProfile}
-          onAddCertification={addCertification}
-        />
-
-        {activeTab === DashboardTab.OVERVIEW && <OverviewTab projects={projects} blogs={blogs} onExploreJournal={() => setActiveTab(DashboardTab.BLOGS)} />}
-        {activeTab === DashboardTab.PROJECTS && (
-          <ProjectsTab projects={projects} isAiLoading={isAiLoading} onUpdate={(id, up) => updateItem('projects', id, up)} onDelete={(id) => deleteItem('projects', id)} onAiRefine={() => {}} />
-        )}
-        {activeTab === DashboardTab.BLOGS && (
-          <JournalTab blogs={blogs} isAiLoading={isAiLoading} onUpdate={(id, up) => updateItem('blogs', id, up)} onDelete={(id) => deleteItem('blogs', id)} onAiRefine={() => {}} onToggleFeature={toggleBlogFeature} />
-        )}
-        {activeTab === DashboardTab.CERTIFICATIONS && (
-          <CertificationsTab certs={certifications} onUpdate={(id, up) => updateItem('certifications', id, up)} onDelete={(id) => deleteItem('certifications', id)} onAdd={addCertification} />
-        )}
-        {activeTab === DashboardTab.PROFILE && <ProfileTab profile={profile} onProfileChange={(up) => setProfile({ ...profile, ...up })} />}
-      </main>
     </div>
   );
 }
