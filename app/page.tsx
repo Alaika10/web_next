@@ -1,56 +1,106 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { supabase } from '../lib/supabase';
 import { INITIAL_PROFILE } from '../constants';
 import { Project, BlogPost, Profile } from '../types';
-import { BarChart3, ArrowUpRight, MousePointer2 } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
+import Skeleton from '../components/Skeleton';
 
-// Placeholder SVG statis yang sangat ringan (Critical for FCP)
-const RadarPlaceholder = () => (
-  <div className="w-full h-full flex items-center justify-center relative bg-slate-50/50 dark:bg-slate-900/50 rounded-full border border-dashed border-slate-200 dark:border-slate-800">
-    <div className="w-12 h-12 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-  </div>
-);
-
+// Radar chart adalah komponen berat, tetap dynamic namun lebih ringan
 const HomeRadarChart = dynamic(() => import('../components/HomeRadarChart'), { 
   ssr: false,
-  loading: () => <RadarPlaceholder />
+  loading: () => <div className="w-full h-full flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-full animate-pulse"></div>
 });
 
 export const revalidate = 3600;
 
+// Sub-komponen untuk data dinamis agar bisa di-stream
+async function ProjectsSection() {
+  let projects: Project[] = [];
+  if (supabase) {
+    const { data } = await supabase.from('projects').select('*').limit(2).order('created_at', { ascending: false });
+    if (data) projects = data.map((p: any) => ({ ...p, imageUrl: p.image_url }));
+  }
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {projects.map((project, idx) => (
+        <Link key={project.id} href={`/projects/${project.id}`} className="group relative bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden border border-slate-200 dark:border-slate-800 hover:shadow-xl transition-all">
+          <div className="h-[300px] overflow-hidden relative bg-slate-100 dark:bg-slate-900">
+            {project.imageUrl && (
+              <Image 
+                src={project.imageUrl} 
+                alt={project.title} 
+                fill
+                sizes="(max-width: 768px) 100vw, 600px"
+                // Hanya gambar pertama yang diberi priority tinggi untuk LCP
+                priority={idx === 0}
+                // @ts-ignore - fetchPriority didukung oleh React 19/Next 14 di browser modern
+                fetchPriority={idx === 0 ? "high" : "auto"}
+                className="object-cover transform group-hover:scale-105 transition-transform duration-700 grayscale group-hover:grayscale-0 opacity-90 group-hover:opacity-100" 
+                quality={75}
+              />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 to-transparent"></div>
+            <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end text-white">
+              <h3 className="text-2xl font-black tracking-tighter">{project.title}</h3>
+              <ArrowUpRight size={20} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+async function BlogSection() {
+  let blogs: BlogPost[] = [];
+  if (supabase) {
+    const { data } = await supabase.from('blogs').select('*').limit(3).order('date', { ascending: false });
+    if (data) blogs = data.map((item: any) => ({ ...item, imageUrl: item.image_url }));
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+      {blogs.map(post => (
+        <article key={post.id} className="group space-y-4">
+          <Link href={`/blog/${post.id}`} className="block space-y-4">
+            <div className="aspect-[16/11] rounded-[1.5rem] overflow-hidden border border-slate-200 dark:border-slate-800 relative bg-slate-100 dark:bg-slate-800 transition-all group-hover:shadow-lg">
+              {post.imageUrl && (
+                <Image 
+                  src={post.imageUrl} 
+                  alt={post.title} 
+                  fill
+                  sizes="(max-width: 768px) 100vw, 400px"
+                  className="object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all" 
+                  quality={60}
+                />
+              )}
+            </div>
+            <div className="space-y-2">
+              <span className="font-mono text-[8px] text-indigo-600 font-black uppercase tracking-widest">{post.date}</span>
+              <h3 className="text-lg font-black tracking-tight leading-snug group-hover:text-indigo-600 transition-colors">{post.title}</h3>
+            </div>
+          </Link>
+        </article>
+      ))}
+    </div>
+  );
+}
+
 export default async function HomePage() {
   let profile: Profile = INITIAL_PROFILE;
-  let projects: Project[] = [];
-  let blogs: BlogPost[] = [];
-
   if (supabase) {
-    const [profileRes, projectsRes, blogsRes] = await Promise.all([
-      supabase.from('profiles').select('*').maybeSingle(),
-      supabase.from('projects').select('*').limit(2).order('created_at', { ascending: false }),
-      supabase.from('blogs').select('*').limit(3).order('date', { ascending: false })
-    ]);
-
-    if (profileRes.data) profile = profileRes.data;
-    if (projectsRes.data) {
-      projects = projectsRes.data.map((p: any) => ({
-        ...p,
-        imageUrl: p.image_url
-      }));
-    }
-    if (blogsRes.data) {
-      blogs = blogsRes.data.map((item: any) => ({
-        ...item,
-        imageUrl: item.image_url
-      }));
-    }
+    const { data } = await supabase.from('profiles').select('*').maybeSingle();
+    if (data) profile = data;
   }
 
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       <div className="space-y-24 py-8 px-6 md:px-12 max-w-7xl mx-auto">
+        {/* HERO SECTION - Rendered Immediately */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center pt-2 md:pt-6">
           <div className="lg:col-span-7 xl:col-span-8 space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -88,6 +138,7 @@ export default async function HomePage() {
           </div>
         </section>
 
+        {/* PROJECTS SECTION - Streamed */}
         <section className="space-y-10">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
             <h2 className="text-3xl md:text-4xl font-black tracking-tighter">Selected Models.</h2>
@@ -95,62 +146,19 @@ export default async function HomePage() {
               View All Systems
             </Link>
           </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {projects.map((project, idx) => (
-              <Link key={project.id} href={`/projects/${project.id}`} className="group relative bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden border border-slate-200 dark:border-slate-800 hover:shadow-xl transition-all">
-                <div className="h-[300px] overflow-hidden relative bg-slate-100 dark:bg-slate-900">
-                  {project.imageUrl && (
-                    <Image 
-                      src={project.imageUrl} 
-                      alt={project.title} 
-                      fill
-                      sizes="(max-width: 768px) 100vw, 600px"
-                      priority={idx === 0} // LCP CRITICAL OPTIMIZATION
-                      className="object-cover transform group-hover:scale-105 transition-transform duration-700 grayscale group-hover:grayscale-0 opacity-90 group-hover:opacity-100" 
-                      quality={60} // Lower quality for faster load
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 to-transparent"></div>
-                  <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end text-white">
-                    <h3 className="text-2xl font-black tracking-tighter">{project.title}</h3>
-                    <ArrowUpRight size={20} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <Suspense fallback={<div className="grid grid-cols-1 lg:grid-cols-2 gap-8"><Skeleton className="h-[300px]" /><Skeleton className="h-[300px]" /></div>}>
+            <ProjectsSection />
+          </Suspense>
         </section>
 
+        {/* BLOG SECTION - Streamed */}
         <section className="space-y-10">
           <div className="border-b border-slate-200 dark:border-slate-800 pb-8">
             <h2 className="text-3xl md:text-4xl font-black tracking-tighter">The Data Journal.</h2>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {blogs.map(post => (
-              <article key={post.id} className="group space-y-4">
-                <Link href={`/blog/${post.id}`} className="block space-y-4">
-                  <div className="aspect-[16/11] rounded-[1.5rem] overflow-hidden border border-slate-200 dark:border-slate-800 relative bg-slate-100 dark:bg-slate-800 transition-all group-hover:shadow-lg">
-                    {post.imageUrl && (
-                      <Image 
-                        src={post.imageUrl} 
-                        alt={post.title} 
-                        fill
-                        sizes="(max-width: 768px) 100vw, 400px"
-                        className="object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all" 
-                        quality={50}
-                      />
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <span className="font-mono text-[8px] text-indigo-600 font-black uppercase tracking-widest">{post.date}</span>
-                    <h3 className="text-lg font-black tracking-tight leading-snug group-hover:text-indigo-600 transition-colors">{post.title}</h3>
-                  </div>
-                </Link>
-              </article>
-            ))}
-          </div>
+          <Suspense fallback={<div className="grid grid-cols-1 md:grid-cols-3 gap-10"><Skeleton className="h-[200px]" /><Skeleton className="h-[200px]" /><Skeleton className="h-[200px]" /></div>}>
+            <BlogSection />
+          </Suspense>
         </section>
       </div>
     </div>

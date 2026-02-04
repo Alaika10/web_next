@@ -14,6 +14,7 @@ const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-inter',
+  adjustFontFallback: true, // Mencegah Layout Shift saat font dimuat
 });
 
 export const viewport: Viewport = {
@@ -23,6 +24,7 @@ export const viewport: Viewport = {
 };
 
 const deploymentUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://datalab.alex.studio';
+const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname : '';
 
 export const metadata: Metadata = {
   metadataBase: new URL(deploymentUrl),
@@ -34,31 +36,16 @@ export const metadata: Metadata = {
   icons: {
     icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧬</text></svg>',
   },
-  openGraph: {
-    type: 'website',
-    locale: 'id_ID',
-    url: deploymentUrl,
-    siteName: 'DataLabs by Alex',
-    images: [
-      {
-        url: '/og-main.png',
-        width: 1200,
-        height: 630,
-        alt: 'DataLabs by Alex Sterling',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'DataLabs by Alex',
-    description: 'Expert in Deep Learning and Predictive Analytics.',
-    images: ['/og-main.png'],
-  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} scroll-smooth`}>
+      <head>
+        {/* Preconnect ke domain kritikal untuk memangkas waktu DNS lookup & handshake */}
+        {supabaseHost && <link rel="preconnect" href={`https://${supabaseHost}`} crossOrigin="anonymous" />}
+        <link rel="preconnect" href="https://images.unsplash.com" />
+      </head>
       <body className="data-grid-bg font-sans bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 transition-colors duration-300 antialiased">
         <Navbar />
         <main className="flex-grow pt-20 min-h-screen relative z-10">
