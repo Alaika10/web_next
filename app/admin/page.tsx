@@ -7,8 +7,8 @@ import { supabase } from '../../lib/supabase';
 import { INITIAL_PROFILE } from '../../constants';
 import { isAuthenticated } from '../../lib/auth';
 import { Menu, Terminal } from 'lucide-react';
+import { deleteRecord, toggleBlogFeature } from './actions';
 
-// Import Modular Components
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import AdminHeader from '../../components/admin/AdminHeader';
 import OverviewTab from '../../components/admin/OverviewTab';
@@ -26,7 +26,6 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<DashboardTab>(DashboardTab.OVERVIEW);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [isAiLoading, setIsAiLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -41,29 +40,27 @@ export default function AdminPage() {
         return;
       }
       try {
-        const { data: p } = await supabase.from('profiles').select('*').maybeSingle();
-        if (p) setProfile(p);
-        
-        const { data: projs } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
-        if (projs) setProjects(projs.map(p => ({ ...p, imageUrl: p.image_url })));
-        
-        const { data: b } = await supabase.from('blogs').select('*').order('date', { ascending: false });
-        if (b) setBlogs(b.map(item => ({ 
+        const [p, projs, b, certs] = await Promise.all([
+          supabase.from('profiles').select('*').maybeSingle(),
+          supabase.from('projects').select('id, title, description, image_url, created_at, technologies').order('created_at', { ascending: false }),
+          supabase.from('blogs').select('id, title, excerpt, date, author, image_url, is_headline, is_trending').order('date', { ascending: false }),
+          supabase.from('certifications').select('*').order('issue_date', { ascending: false })
+        ]);
+
+        if (p.data) setProfile(p.data);
+        if (projs.data) setProjects(projs.data.map((p:any) => ({ ...p, imageUrl: p.image_url })));
+        if (b.data) setBlogs(b.data.map((item:any) => ({ 
           ...item, 
           imageUrl: item.image_url,
           isHeadline: item.is_headline,
           isTrending: item.is_trending
         })));
-
-        const { data: certs } = await supabase.from('certifications').select('*').order('issue_date', { ascending: false });
-        if (certs) setCertifications(certs.map(c => ({
+        if (certs.data) setCertifications(certs.data.map((c:any) => ({
           ...c,
           issueDate: c.issue_date,
           imageUrl: c.image_url,
           credentialUrl: c.credential_url
         })));
-      } catch (err) {
-        console.error("Sync Error:", err);
       } finally {
         setLoading(false);
       }
@@ -75,120 +72,42 @@ export default function AdminPage() {
   const addProject = async () => {
     if (!supabase) return;
     setIsSaving(true);
-    try {
-      const { data, error } = await supabase.from('projects').insert([{
-        title: "Untitled Project",
-        description: "New project description pending...",
-        technologies: [],
-        image_url: ""
-      }]).select('*').single();
-      if (error) throw error;
-      if (data) {
-        router.push(`/admin/projects/${data.id}`);
-      }
-    } catch (err) { alert("Failed to create project."); } 
-    finally { setIsSaving(false); }
+    const { data } = await supabase.from('projects').insert([{ title: "Untitled Project", description: "Draft...", technologies: [] }]).select('id').single();
+    if (data) router.push(`/admin/projects/${data.id}`);
+    setIsSaving(false);
   };
 
   const addBlog = async () => {
     if (!supabase) return;
     setIsSaving(true);
-    try {
-      const { data, error } = await supabase.from('blogs').insert([{
-        title: "Untitled Research Entry",
-        excerpt: "Brief summary pending...",
-        content: "# New Article",
-        author: profile.name,
-        date: new Date().toISOString().split('T')[0],
-        tags: [],
-        is_headline: false,
-        is_trending: false
-      }]).select('*').single();
-      if (error) throw error;
-      if (data) {
-        router.push(`/admin/blogs/${data.id}`);
-      }
-    } catch (err) { alert("Failed to create blog."); }
-    finally { setIsSaving(false); }
+    const { data } = await supabase.from('blogs').insert([{ title: "New Entry", excerpt: "Draft...", content: "# Start writing", author: profile.name, date: new Date().toISOString().split('T')[0] }]).select('id').single();
+    if (data) router.push(`/admin/blogs/${data.id}`);
+    setIsSaving(false);
   };
 
-  const addCertification = async () => {
-    if (!supabase) return;
+  const handleDelete = async (table: string, id: string) => {
+    if (!confirm("Delete permanently?")) return;
     setIsSaving(true);
-    try {
-      const { data, error } = await supabase.from('certifications').insert([{
-        title: "New Certification",
-        issuer: "Issuer Organization",
-        issue_date: new Date().toISOString().split('T')[0],
-        image_url: "",
-        credential_url: "",
-        description: ""
-      }]).select('*').single();
-      if (error) throw error;
-      if (data) {
-        // Karena sertifikasi tidak memiliki editor khusus terpisah, kita tetap di sini tapi dengan entri baru
-        setCertifications([{
-          ...data,
-          issueDate: data.issue_date,
-          imageUrl: data.image_url,
-          credentialUrl: data.credential_url
-        }, ...certifications]);
-      }
-    } catch (err) { alert("Error creating credential."); }
-    finally { setIsSaving(false); }
+    const result = await deleteRecord(table, id);
+    if (result.success) {
+      if (table === 'projects') setProjects(prev => prev.filter(p => p.id !== id));
+      else if (table === 'blogs') setBlogs(prev => prev.filter(b => b.id !== id));
+      else if (table === 'certifications') setCertifications(prev => prev.filter(c => c.id !== id));
+    } else {
+      alert(result.error);
+    }
+    setIsSaving(false);
   };
 
-  const deleteItem = async (table: string, id: string) => {
-    if (!supabase || !confirm("Permanent delete?")) return;
-    setIsSaving(true);
-    try {
-      await supabase.from(table).delete().eq('id', id);
-      if (table === 'projects') setProjects(projects.filter(p => p.id !== id));
-      else if (table === 'blogs') setBlogs(blogs.filter(b => b.id !== id));
-      else if (table === 'certifications') setCertifications(certifications.filter(c => c.id !== id));
-    } finally { setIsSaving(false); }
-  };
-
-  const updateItem = async (table: string, id: string, updates: any) => {
-    if (!supabase) return;
-    setIsSaving(true);
-    try {
-      const dbUpdates = { ...updates };
-      if (updates.imageUrl !== undefined) { dbUpdates.image_url = updates.imageUrl; delete dbUpdates.imageUrl; }
-      if (updates.issueDate !== undefined) { dbUpdates.issue_date = updates.issueDate; delete dbUpdates.issueDate; }
-      if (updates.credentialUrl !== undefined) { dbUpdates.credential_url = updates.credentialUrl; delete dbUpdates.credentialUrl; }
-      const { error } = await supabase.from(table).update(dbUpdates).eq('id', id);
-      if (error) throw error;
-      if (table === 'certifications') setCertifications(certifications.map(c => c.id === id ? { ...c, ...updates } : c));
-      else if (table === 'projects') setProjects(projects.map(p => p.id === id ? { ...p, ...updates } : p));
-      else if (table === 'blogs') setBlogs(blogs.map(b => b.id === id ? { ...b, ...updates } : b));
-    } finally { setIsSaving(false); }
-  };
-
-  const toggleBlogFeature = async (id: string, type: 'isHeadline' | 'isTrending') => {
-    if (!supabase) return;
+  const handleToggleBlog = async (id: string, type: 'isHeadline' | 'isTrending') => {
+    const field = type === 'isHeadline' ? 'is_headline' : 'is_trending';
     const post = blogs.find(b => b.id === id);
     if (!post) return;
-    const newValue = !post[type];
-    const dbField = type === 'isHeadline' ? 'is_headline' : 'is_trending';
-    try {
-      const { error } = await supabase.from('blogs').update({ [dbField]: newValue }).eq('id', id);
-      if (error) throw error;
-      setBlogs(blogs.map(b => b.id === id ? { ...b, [type]: newValue } : b));
-    } catch (err) { console.error("Feature toggle failed"); }
-  };
-
-  const saveProfile = async () => {
-    if (!supabase) return;
-    setIsSaving(true);
-    try {
-      const { error } = await supabase.from('profiles').upsert({
-        ...profile, updated_at: new Date().toISOString()
-      }, { onConflict: 'id' });
-      if (error) throw error;
-      alert("Profile updated successfully");
-    } catch (err) { alert("Failed to update profile"); }
-    finally { setIsSaving(false); }
+    
+    const result = await toggleBlogFeature(id, field, !post[type]);
+    if (result.success) {
+      setBlogs(prev => prev.map(b => b.id === id ? { ...b, [type]: !b[type] } : b));
+    }
   };
 
   if (loading) return (
@@ -199,79 +118,24 @@ export default function AdminPage() {
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
-      
-      <AdminSidebar 
-        activeTab={activeTab} 
-        onTabChange={(tab) => { setActiveTab(tab); setIsSidebarOpen(false); }} 
-        isOpen={isSidebarOpen} 
-        onClose={() => setIsSidebarOpen(false)} 
-      />
-
+      <AdminSidebar activeTab={activeTab} onTabChange={(tab) => { setActiveTab(tab); setIsSidebarOpen(false); }} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
-        
-        <div className="lg:hidden flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0">
+        <div className="lg:hidden flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border-b shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
-              <Terminal size={16} />
-            </div>
-            <span className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-white">Admin Console</span>
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white"><Terminal size={16} /></div>
+            <span className="font-black text-[10px] uppercase tracking-widest">Admin Console</span>
           </div>
-          <button 
-            onClick={() => setIsSidebarOpen(true)} 
-            className="p-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-600 dark:text-slate-300"
-          >
-            <Menu size={20} />
-          </button>
+          <button onClick={() => setIsSidebarOpen(true)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-xl"><Menu size={20} /></button>
         </div>
-
-        <main className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-10 lg:p-14">
+        <main className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-14">
           <div className="max-w-6xl mx-auto space-y-12 pb-20">
-            
-            <AdminHeader 
-              activeTab={activeTab}
-              isSupabase={!!supabase}
-              isSaving={isSaving}
-              onAddProject={addProject} 
-              onAddBlog={addBlog} 
-              onSaveProfile={saveProfile}
-              onAddCertification={addCertification}
-            />
-
-            <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-              {activeTab === DashboardTab.OVERVIEW && (
-                <OverviewTab 
-                  projects={projects} 
-                  blogs={blogs} 
-                  onExploreJournal={() => setActiveTab(DashboardTab.BLOGS)} 
-                />
-              )}
-              {activeTab === DashboardTab.PROJECTS && (
-                <ProjectsTab 
-                  projects={projects} 
-                  onDelete={(id) => deleteItem('projects', id)} 
-                />
-              )}
-              {activeTab === DashboardTab.BLOGS && (
-                <JournalTab 
-                  blogs={blogs} 
-                  onDelete={(id) => deleteItem('blogs', id)} 
-                  onToggleFeature={toggleBlogFeature} 
-                />
-              )}
-              {activeTab === DashboardTab.CERTIFICATIONS && (
-                <CertificationsTab 
-                  certs={certifications} 
-                  onUpdate={(id, up) => updateItem('certifications', id, up)} 
-                  onDelete={(id) => deleteItem('certifications', id)} 
-                  onAdd={addCertification} 
-                />
-              )}
-              {activeTab === DashboardTab.PROFILE && (
-                <ProfileTab 
-                  profile={profile} 
-                  onProfileChange={(up) => setProfile({ ...profile, ...up })} 
-                />
-              )}
+            <AdminHeader activeTab={activeTab} isSupabase={!!supabase} isSaving={isSaving} onAddProject={addProject} onAddBlog={addBlog} onSaveProfile={() => {}} onAddCertification={() => {}} />
+            <div className="animate-in fade-in duration-500">
+              {activeTab === DashboardTab.OVERVIEW && <OverviewTab projects={projects} blogs={blogs} onExploreJournal={() => setActiveTab(DashboardTab.BLOGS)} />}
+              {activeTab === DashboardTab.PROJECTS && <ProjectsTab projects={projects} onDelete={(id) => handleDelete('projects', id)} />}
+              {activeTab === DashboardTab.BLOGS && <JournalTab blogs={blogs} onDelete={(id) => handleDelete('blogs', id)} onToggleFeature={handleToggleBlog} />}
+              {activeTab === DashboardTab.CERTIFICATIONS && <CertificationsTab certs={certifications} onUpdate={() => {}} onDelete={(id) => handleDelete('certifications', id)} onAdd={() => {}} />}
+              {activeTab === DashboardTab.PROFILE && <ProfileTab profile={profile} onProfileChange={(up) => setProfile(prev => ({ ...prev, ...up }))} />}
             </div>
           </div>
         </main>
