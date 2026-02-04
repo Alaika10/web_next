@@ -77,13 +77,15 @@ export default function AdminPage() {
     setIsSaving(true);
     try {
       const { data, error } = await supabase.from('projects').insert([{
-        title: "New Project Implementation",
-        description: "Initial model description...",
-        technologies: ["Python"],
+        title: "Untitled Project",
+        description: "New project description pending...",
+        technologies: [],
         image_url: ""
       }]).select('*').single();
       if (error) throw error;
-      if (data) setProjects([{ ...data, imageUrl: data.image_url }, ...projects]);
+      if (data) {
+        router.push(`/admin/projects/${data.id}`);
+      }
     } catch (err) { alert("Failed to create project."); } 
     finally { setIsSaving(false); }
   };
@@ -93,17 +95,19 @@ export default function AdminPage() {
     setIsSaving(true);
     try {
       const { data, error } = await supabase.from('blogs').insert([{
-        title: "New Research Entry",
-        excerpt: "Brief summary...",
+        title: "Untitled Research Entry",
+        excerpt: "Brief summary pending...",
         content: "# New Article",
         author: profile.name,
         date: new Date().toISOString().split('T')[0],
-        tags: ["Research"],
+        tags: [],
         is_headline: false,
         is_trending: false
       }]).select('*').single();
       if (error) throw error;
-      if (data) setBlogs([{ ...data, imageUrl: data.image_url }, ...blogs]);
+      if (data) {
+        router.push(`/admin/blogs/${data.id}`);
+      }
     } catch (err) { alert("Failed to create blog."); }
     finally { setIsSaving(false); }
   };
@@ -114,7 +118,7 @@ export default function AdminPage() {
     try {
       const { data, error } = await supabase.from('certifications').insert([{
         title: "New Certification",
-        issuer: "Organization Name",
+        issuer: "Issuer Organization",
         issue_date: new Date().toISOString().split('T')[0],
         image_url: "",
         credential_url: "",
@@ -122,6 +126,7 @@ export default function AdminPage() {
       }]).select('*').single();
       if (error) throw error;
       if (data) {
+        // Karena sertifikasi tidak memiliki editor khusus terpisah, kita tetap di sini tapi dengan entri baru
         setCertifications([{
           ...data,
           issueDate: data.issue_date,
@@ -195,7 +200,6 @@ export default function AdminPage() {
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
       
-      {/* Sidebar - Positioned correctly to not overlap */}
       <AdminSidebar 
         activeTab={activeTab} 
         onTabChange={(tab) => { setActiveTab(tab); setIsSidebarOpen(false); }} 
@@ -203,10 +207,8 @@ export default function AdminPage() {
         onClose={() => setIsSidebarOpen(false)} 
       />
 
-      {/* Main Content Wrapper */}
       <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
         
-        {/* Mobile Header (Only visible on Mobile) */}
         <div className="lg:hidden flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
@@ -222,7 +224,6 @@ export default function AdminPage() {
           </button>
         </div>
 
-        {/* Scrollable Area */}
         <main className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-10 lg:p-14">
           <div className="max-w-6xl mx-auto space-y-12 pb-20">
             
@@ -247,19 +248,13 @@ export default function AdminPage() {
               {activeTab === DashboardTab.PROJECTS && (
                 <ProjectsTab 
                   projects={projects} 
-                  isAiLoading={isAiLoading} 
-                  onUpdate={(id, up) => updateItem('projects', id, up)} 
                   onDelete={(id) => deleteItem('projects', id)} 
-                  onAiRefine={() => {}} 
                 />
               )}
               {activeTab === DashboardTab.BLOGS && (
                 <JournalTab 
                   blogs={blogs} 
-                  isAiLoading={isAiLoading} 
-                  onUpdate={(id, up) => updateItem('blogs', id, up)} 
                   onDelete={(id) => deleteItem('blogs', id)} 
-                  onAiRefine={() => {}} 
                   onToggleFeature={toggleBlogFeature} 
                 />
               )}
