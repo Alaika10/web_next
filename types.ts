@@ -1,3 +1,4 @@
+
 export interface Project {
   id: string;
   title: string;
@@ -60,6 +61,17 @@ export interface Profile {
     linkedin: string;
     twitter: string;
   };
+}
+
+export interface GithubRepo {
+  id: number;
+  name: string;
+  description: string;
+  html_url: string;
+  stargazers_count: number;
+  language: string;
+  updated_at: string;
+  topics: string[];
 }
 
 export enum DashboardTab {
