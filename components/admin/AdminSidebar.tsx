@@ -1,3 +1,4 @@
+
 'use client';
 import React from 'react';
 import Link from 'next/link';
@@ -21,7 +22,7 @@ export default function AdminSidebar({ activeTab, onTabChange, isOpen, onClose }
 
   const NavItem = ({ tab, icon, label }: { tab: DashboardTab, icon: React.ReactNode, label: string }) => (
     <button 
-      onClick={() => { onTabChange(tab); if(window.innerWidth < 1024) onClose(); }} 
+      onClick={() => onTabChange(tab)} 
       className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all text-sm group ${
         activeTab === tab 
         ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' 
@@ -37,20 +38,28 @@ export default function AdminSidebar({ activeTab, onTabChange, isOpen, onClose }
 
   return (
     <>
-      {/* Mobile Backdrop */}
+      {/* Mobile Backdrop - High Z-index */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[80] lg:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[100] lg:hidden transition-opacity duration-300"
           onClick={onClose}
         />
       )}
 
-      {/* Sidebar Container */}
-      <aside className={`fixed inset-y-0 left-0 z-[90] w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col transform transition-transform duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      {/* Sidebar Container 
+          - On Desktop (lg): relative, translate-x-0, w-72
+          - On Mobile: fixed, transform, z-100
+      */}
+      <aside className={`
+        fixed inset-y-0 left-0 z-[110] w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col 
+        transition-transform duration-300 ease-[cubic-bezier(0.33,1,0.68,1)]
+        lg:relative lg:translate-x-0 lg:z-0
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
         
         {/* Sidebar Header */}
         <div className="p-6 flex flex-col gap-6">
-          <div className="flex items-center justify-between lg:justify-center">
+          <div className="flex items-center justify-between">
             <Link href="/admin" className="flex items-center gap-3 group">
               <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-xl transform group-hover:rotate-12 transition-transform">
                 <Terminal size={20} strokeWidth={3} />

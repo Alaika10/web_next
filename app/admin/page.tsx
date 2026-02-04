@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -27,9 +28,6 @@ export default function AdminPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
-
-  const isSupabase = !!supabase;
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -135,19 +133,6 @@ export default function AdminPage() {
     finally { setIsSaving(false); }
   };
 
-  const toggleBlogFeature = async (id: string, type: 'isHeadline' | 'isTrending') => {
-    if (!supabase) return;
-    const post = blogs.find(b => b.id === id);
-    if (!post) return;
-    const newValue = !post[type];
-    const dbField = type === 'isHeadline' ? 'is_headline' : 'is_trending';
-    try {
-      const { error } = await supabase.from('blogs').update({ [dbField]: newValue }).eq('id', id);
-      if (error) throw error;
-      setBlogs(blogs.map(b => b.id === id ? { ...b, [type]: newValue } : b));
-    } catch (err) { console.error("Feature toggle failed"); }
-  };
-
   const deleteItem = async (table: string, id: string) => {
     if (!supabase || !confirm("Permanent delete?")) return;
     setIsSaving(true);
@@ -175,6 +160,19 @@ export default function AdminPage() {
     } finally { setIsSaving(false); }
   };
 
+  const toggleBlogFeature = async (id: string, type: 'isHeadline' | 'isTrending') => {
+    if (!supabase) return;
+    const post = blogs.find(b => b.id === id);
+    if (!post) return;
+    const newValue = !post[type];
+    const dbField = type === 'isHeadline' ? 'is_headline' : 'is_trending';
+    try {
+      const { error } = await supabase.from('blogs').update({ [dbField]: newValue }).eq('id', id);
+      if (error) throw error;
+      setBlogs(blogs.map(b => b.id === id ? { ...b, [type]: newValue } : b));
+    } catch (err) { console.error("Feature toggle failed"); }
+  };
+
   const saveProfile = async () => {
     if (!supabase) return;
     setIsSaving(true);
@@ -183,42 +181,38 @@ export default function AdminPage() {
         ...profile, updated_at: new Date().toISOString()
       }, { onConflict: 'id' });
       if (error) throw error;
-      setSaveStatus('success');
-      setTimeout(() => setSaveStatus('idle'), 3000);
-    } catch (err) { setSaveStatus('error'); }
+      alert("Profile updated successfully");
+    } catch (err) { alert("Failed to update profile"); }
     finally { setIsSaving(false); }
   };
 
-  const handleTabChange = (tab: DashboardTab) => {
-    setActiveTab(tab);
-  };
-
   if (loading) return (
-    <div className="h-screen flex flex-col items-center justify-center gap-4 bg-slate-50 dark:bg-slate-950">
+    <div className="h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
       <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex overflow-hidden">
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
       
-      {/* Dynamic Sidebar */}
+      {/* Sidebar - Positioned correctly to not overlap */}
       <AdminSidebar 
         activeTab={activeTab} 
-        onTabChange={handleTabChange} 
+        onTabChange={(tab) => { setActiveTab(tab); setIsSidebarOpen(false); }} 
         isOpen={isSidebarOpen} 
         onClose={() => setIsSidebarOpen(false)} 
       />
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+      {/* Main Content Wrapper */}
+      <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
         
-        {/* Mobile Navbar - Only visible on small screens */}
-        <div className="lg:hidden flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-50">
+        {/* Mobile Header (Only visible on Mobile) */}
+        <div className="lg:hidden flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
               <Terminal size={16} />
             </div>
-            <span className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-white">Console</span>
+            <span className="font-black text-[10px] uppercase tracking-widest text-slate-900 dark:text-white">Admin Console</span>
           </div>
           <button 
             onClick={() => setIsSidebarOpen(true)} 
@@ -228,13 +222,13 @@ export default function AdminPage() {
           </button>
         </div>
 
-        {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-10 lg:p-14 custom-scrollbar">
-          <div className="max-w-6xl mx-auto space-y-12">
+        {/* Scrollable Area */}
+        <main className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-10 lg:p-14">
+          <div className="max-w-6xl mx-auto space-y-12 pb-20">
             
             <AdminHeader 
               activeTab={activeTab}
-              isSupabase={isSupabase}
+              isSupabase={!!supabase}
               isSaving={isSaving}
               onAddProject={addProject} 
               onAddBlog={addBlog} 
@@ -243,17 +237,46 @@ export default function AdminPage() {
             />
 
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-              {activeTab === DashboardTab.OVERVIEW && <OverviewTab projects={projects} blogs={blogs} onExploreJournal={() => setActiveTab(DashboardTab.BLOGS)} />}
+              {activeTab === DashboardTab.OVERVIEW && (
+                <OverviewTab 
+                  projects={projects} 
+                  blogs={blogs} 
+                  onExploreJournal={() => setActiveTab(DashboardTab.BLOGS)} 
+                />
+              )}
               {activeTab === DashboardTab.PROJECTS && (
-                <ProjectsTab projects={projects} isAiLoading={isAiLoading} onUpdate={(id, up) => updateItem('projects', id, up)} onDelete={(id) => deleteItem('projects', id)} onAiRefine={() => {}} />
+                <ProjectsTab 
+                  projects={projects} 
+                  isAiLoading={isAiLoading} 
+                  onUpdate={(id, up) => updateItem('projects', id, up)} 
+                  onDelete={(id) => deleteItem('projects', id)} 
+                  onAiRefine={() => {}} 
+                />
               )}
               {activeTab === DashboardTab.BLOGS && (
-                <JournalTab blogs={blogs} isAiLoading={isAiLoading} onUpdate={(id, up) => updateItem('blogs', id, up)} onDelete={(id) => deleteItem('blogs', id)} onAiRefine={() => {}} onToggleFeature={toggleBlogFeature} />
+                <JournalTab 
+                  blogs={blogs} 
+                  isAiLoading={isAiLoading} 
+                  onUpdate={(id, up) => updateItem('blogs', id, up)} 
+                  onDelete={(id) => deleteItem('blogs', id)} 
+                  onAiRefine={() => {}} 
+                  onToggleFeature={toggleBlogFeature} 
+                />
               )}
               {activeTab === DashboardTab.CERTIFICATIONS && (
-                <CertificationsTab certs={certifications} onUpdate={(id, up) => updateItem('certifications', id, up)} onDelete={(id) => deleteItem('certifications', id)} onAdd={addCertification} />
+                <CertificationsTab 
+                  certs={certifications} 
+                  onUpdate={(id, up) => updateItem('certifications', id, up)} 
+                  onDelete={(id) => deleteItem('certifications', id)} 
+                  onAdd={addCertification} 
+                />
               )}
-              {activeTab === DashboardTab.PROFILE && <ProfileTab profile={profile} onProfileChange={(up) => setProfile({ ...profile, ...up })} />}
+              {activeTab === DashboardTab.PROFILE && (
+                <ProfileTab 
+                  profile={profile} 
+                  onProfileChange={(up) => setProfile({ ...profile, ...up })} 
+                />
+              )}
             </div>
           </div>
         </main>
