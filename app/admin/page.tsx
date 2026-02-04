@@ -6,7 +6,7 @@ import { generateBlogDraft, generateProjectDescription } from '../../services/ge
 import { supabase } from '../../lib/supabase';
 import { INITIAL_PROFILE } from '../../constants';
 import { isAuthenticated } from '../../lib/auth';
-import { Sparkles, Menu, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Menu } from 'lucide-react';
 
 // Import Modular Components
 import AdminSidebar from '../../components/admin/AdminSidebar';
@@ -51,7 +51,12 @@ export default function AdminPage() {
         if (projs) setProjects(projs.map(p => ({ ...p, imageUrl: p.image_url })));
         
         const { data: b } = await supabase.from('blogs').select('*').order('date', { ascending: false });
-        if (b) setBlogs(b.map(item => ({ ...item, imageUrl: item.image_url })));
+        if (b) setBlogs(b.map(item => ({ 
+          ...item, 
+          imageUrl: item.image_url,
+          isHeadline: item.is_headline,
+          isTrending: item.is_trending
+        })));
 
         const { data: certs } = await supabase.from('certifications').select('*').order('issue_date', { ascending: false });
         if (certs) setCertifications(certs.map(c => ({
@@ -70,6 +75,46 @@ export default function AdminPage() {
     refreshData();
   }, [router]);
 
+  const addProject = async () => {
+    if (!supabase) return;
+    setIsSaving(true);
+    try {
+      const { data, error } = await supabase.from('projects').insert([{
+        title: "New Project Implementation",
+        description: "Initial model description...",
+        technologies: ["Python"],
+        image_url: ""
+      }]).select('*').single();
+
+      if (error) throw error;
+      if (data) setProjects([{ ...data, imageUrl: data.image_url }, ...projects]);
+    } catch (err) {
+      alert("Failed to create project record.");
+    } finally { setIsSaving(false); }
+  };
+
+  const addBlog = async () => {
+    if (!supabase) return;
+    setIsSaving(true);
+    try {
+      const { data, error } = await supabase.from('blogs').insert([{
+        title: "New Research Entry",
+        excerpt: "Brief summary of the findings...",
+        content: "# New Article",
+        author: profile.name,
+        date: new Date().toISOString().split('T')[0],
+        tags: ["Research"],
+        is_headline: false,
+        is_trending: false
+      }]).select('*').single();
+
+      if (error) throw error;
+      if (data) setBlogs([{ ...data, imageUrl: data.image_url }, ...blogs]);
+    } catch (err) {
+      alert("Failed to create blog record.");
+    } finally { setIsSaving(false); }
+  };
+
   const addCertification = async () => {
     if (!supabase) return;
     setIsSaving(true);
@@ -78,7 +123,7 @@ export default function AdminPage() {
         title: "New Certification",
         issuer: "Organization Name",
         issue_date: new Date().toISOString().split('T')[0],
-        image_url: "https://images.unsplash.com/photo-1589330694653-ded6df03f754?q=80&w=800",
+        image_url: "",
         credential_url: "",
         description: ""
       }]).select('*').single();
@@ -100,6 +145,23 @@ export default function AdminPage() {
     }
   };
 
+  const toggleBlogFeature = async (id: string, type: 'isHeadline' | 'isTrending') => {
+    if (!supabase) return;
+    const post = blogs.find(b => b.id === id);
+    if (!post) return;
+
+    const newValue = !post[type];
+    const dbField = type === 'isHeadline' ? 'is_headline' : 'is_trending';
+
+    try {
+      const { error } = await supabase.from('blogs').update({ [dbField]: newValue }).eq('id', id);
+      if (error) throw error;
+      setBlogs(blogs.map(b => b.id === id ? { ...b, [type]: newValue } : b));
+    } catch (err) {
+      console.error("Feature toggle failed");
+    }
+  };
+
   const deleteItem = async (table: string, id: string) => {
     if (!supabase || !confirm("Permanent delete?")) return;
     setIsSaving(true);
@@ -118,20 +180,13 @@ export default function AdminPage() {
     setIsSaving(true);
     try {
       const dbUpdates = { ...updates };
-      // Normalisasi snake_case untuk DB
-      if (updates.imageUrl) { dbUpdates.image_url = updates.imageUrl; }
-      if (updates.issueDate) { dbUpdates.issue_date = updates.issueDate; }
-      if (updates.credentialUrl) { dbUpdates.credential_url = updates.credentialUrl; }
-      
-      // Hapus camelCase sebelum dikirim ke DB agar tidak error
-      delete dbUpdates.imageUrl;
-      delete dbUpdates.issueDate;
-      delete dbUpdates.credentialUrl;
+      if (updates.imageUrl !== undefined) { dbUpdates.image_url = updates.imageUrl; delete dbUpdates.imageUrl; }
+      if (updates.issueDate !== undefined) { dbUpdates.issue_date = updates.issueDate; delete dbUpdates.issueDate; }
+      if (updates.credentialUrl !== undefined) { dbUpdates.credential_url = updates.credentialUrl; delete dbUpdates.credentialUrl; }
 
       const { error } = await supabase.from(table).update(dbUpdates).eq('id', id);
       if (error) throw error;
 
-      // Update state lokal agar UI langsung sinkron
       if (table === 'certifications') {
         setCertifications(certifications.map(c => c.id === id ? { ...c, ...updates } : c));
       } else if (table === 'projects') {
@@ -183,8 +238,8 @@ export default function AdminPage() {
           activeTab={activeTab}
           isSupabase={isSupabase}
           isSaving={isSaving}
-          onAddProject={() => {}} 
-          onAddBlog={() => {}} 
+          onAddProject={addProject} 
+          onAddBlog={addBlog} 
           onSaveProfile={saveProfile}
           onAddCertification={addCertification}
         />
@@ -194,7 +249,7 @@ export default function AdminPage() {
           <ProjectsTab projects={projects} isAiLoading={isAiLoading} onUpdate={(id, up) => updateItem('projects', id, up)} onDelete={(id) => deleteItem('projects', id)} onAiRefine={() => {}} />
         )}
         {activeTab === DashboardTab.BLOGS && (
-          <JournalTab blogs={blogs} isAiLoading={isAiLoading} onUpdate={(id, up) => updateItem('blogs', id, up)} onDelete={(id) => deleteItem('blogs', id)} onAiRefine={() => {}} />
+          <JournalTab blogs={blogs} isAiLoading={isAiLoading} onUpdate={(id, up) => updateItem('blogs', id, up)} onDelete={(id) => deleteItem('blogs', id)} onAiRefine={() => {}} onToggleFeature={toggleBlogFeature} />
         )}
         {activeTab === DashboardTab.CERTIFICATIONS && (
           <CertificationsTab certs={certifications} onUpdate={(id, up) => updateItem('certifications', id, up)} onDelete={(id) => deleteItem('certifications', id)} onAdd={addCertification} />
