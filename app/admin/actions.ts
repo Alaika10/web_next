@@ -2,7 +2,7 @@
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
-import { createServerSupabase, getAccessTokenFromCookies, isAuthorizedAdminEmail } from '../../lib/server-auth';
+import { getVerifiedAdminFromCookies } from '../../lib/server-auth';
 
 type MutableTable = 'projects' | 'blogs' | 'certifications' | 'profiles';
 const MUTABLE_TABLES: MutableTable[] = ['projects', 'blogs', 'certifications', 'profiles'];
@@ -29,13 +29,9 @@ const assertTable = (table: string): MutableTable => {
 
 const assertAdminSession = async () => {
   const cookieStore = cookies();
-  const accessToken = getAccessTokenFromCookies(cookieStore);
-  if (!accessToken) throw new Error('Unauthorized action.');
+  const { user } = await getVerifiedAdminFromCookies(cookieStore);
 
-  const supabase = createServerSupabase();
-  const { data, error } = await supabase.auth.getUser(accessToken);
-
-  if (error || !data.user || !isAuthorizedAdminEmail(data.user.email)) {
+  if (!user) {
     throw new Error('Unauthorized action.');
   }
 };

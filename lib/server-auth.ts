@@ -28,7 +28,10 @@ export const authCookieOptions = {
   path: '/',
 };
 
-export const setAuthCookies = (session: { access_token: string; refresh_token: string; expires_in: number }, cookieStore: ReturnType<typeof cookies>) => {
+export const setAuthCookies = (
+  session: { access_token: string; refresh_token: string; expires_in: number },
+  cookieStore: ReturnType<typeof cookies>,
+) => {
   cookieStore.set(ACCESS_COOKIE, session.access_token, {
     ...authCookieOptions,
     maxAge: session.expires_in,
@@ -45,7 +48,11 @@ export const clearAuthCookies = (cookieStore: ReturnType<typeof cookies>) => {
   cookieStore.delete(REFRESH_COOKIE);
 };
 
-export const getAccessTokenFromCookies = (cookieStore: ReturnType<typeof cookies>) => cookieStore.get(ACCESS_COOKIE)?.value;
+export const getAccessTokenFromCookies = (cookieStore: ReturnType<typeof cookies>) =>
+  cookieStore.get(ACCESS_COOKIE)?.value;
+
+export const getRefreshTokenFromCookies = (cookieStore: ReturnType<typeof cookies>) =>
+  cookieStore.get(REFRESH_COOKIE)?.value;
 
 export const getAllowedAdminEmails = () =>
   (process.env.ADMIN_EMAILS || '')
@@ -58,4 +65,27 @@ export const isAuthorizedAdminEmail = (email?: string | null) => {
   const allowedEmails = getAllowedAdminEmails();
   if (!allowedEmails.length) return false;
   return allowedEmails.includes(email.toLowerCase());
+};
+
+export const getVerifiedAdminFromCookies = async (cookieStore: ReturnType<typeof cookies>) => {
+  const supabase = createServerSupabase();
+  const accessToken = getAccessTokenFromCookies(cookieStore);
+
+  if (accessToken) {
+    const { data, error } = await supabase.auth.getUser(accessToken);
+    if (!error && data.user && isAuthorizedAdminEmail(data.user.email)) {
+      return { user: data.user, refreshed: false };
+    }
+  }
+
+  const refreshToken = getRefreshTokenFromCookies(cookieStore);
+  if (!refreshToken) return { user: null, refreshed: false };
+
+  const { data: refreshedData, error: refreshedError } = await supabase.auth.refreshSession({ refresh_token: refreshToken });
+  if (refreshedError || !refreshedData.session || !refreshedData.user || !isAuthorizedAdminEmail(refreshedData.user.email)) {
+    return { user: null, refreshed: false };
+  }
+
+  setAuthCookies(refreshedData.session, cookieStore);
+  return { user: refreshedData.user, refreshed: true };
 };
