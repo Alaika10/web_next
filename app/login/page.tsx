@@ -22,6 +22,12 @@ export default function LoginPage() {
     setIsLoading(true);
     setError('');
 
+    if (username.trim().length < 3 || password.trim().length < 8) {
+      setError('Input tidak valid.');
+      setIsLoading(false);
+      return;
+    }
+
     setTimeout(() => {
       const success = loginAdmin(username, password);
       if (success) {
@@ -45,6 +51,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <input 
               type="text"
+              autoComplete="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Username"
@@ -53,6 +60,8 @@ export default function LoginPage() {
             />
             <input 
               type="password"
+              autoComplete="current-password"
+              minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"

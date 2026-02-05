@@ -1,10 +1,10 @@
 
 'use client';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { isAuthenticated } from '../lib/auth';
-import { LayoutDashboard, User as UserIcon, Menu, X, Globe, ChevronRight, ArrowRight, Github, Award } from 'lucide-react';
+import { LayoutDashboard, User as UserIcon, Menu, X, ArrowRight, Github } from 'lucide-react';
 
 const Navbar: React.FC = () => {
   const pathname = usePathname();
@@ -12,6 +12,7 @@ const Navbar: React.FC = () => {
   const [mounted, setMounted] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [scrolled, setScrolled] = useState(false);
+  const lastScrollYRef = useRef(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   const isAdminPath = useMemo(() => pathname?.startsWith('/admin'), [pathname]);
@@ -19,17 +20,17 @@ const Navbar: React.FC = () => {
   useEffect(() => {
     setMounted(true);
     setIsAuth(isAuthenticated());
+  }, []);
 
+  useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      setScrolled(currentScrollY > 20);
-      
-      if (currentScrollY > 100 && !isMenuOpen) {
-        setIsVisible(currentScrollY < (window as any).lastScrollY);
-      } else {
-        setIsVisible(true);
-      }
-      (window as any).lastScrollY = currentScrollY;
+      const shouldScrollState = currentScrollY > 20;
+      const shouldVisibleState = currentScrollY <= 100 || isMenuOpen || currentScrollY < lastScrollYRef.current;
+
+      setScrolled(prev => (prev === shouldScrollState ? prev : shouldScrollState));
+      setIsVisible(prev => (prev === shouldVisibleState ? prev : shouldVisibleState));
+      lastScrollYRef.current = currentScrollY;
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
