@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Profile, Project, BlogPost, Certification, DashboardTab } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { INITIAL_PROFILE } from '../../constants';
-import { isAuthenticated } from '../../lib/auth';
 import { Menu, Terminal } from 'lucide-react';
 import { deleteRecord, toggleBlogFeature } from './actions';
 
@@ -29,11 +28,6 @@ export default function AdminPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push('/login');
-      return;
-    }
-
     const refreshData = async () => {
       if (!supabase) {
         setLoading(false);

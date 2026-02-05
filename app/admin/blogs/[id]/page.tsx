@@ -5,7 +5,6 @@ import { supabase } from '../../../../lib/supabase';
 import { processContent } from '../../../../services/contentProcessor';
 import RichEditor from '../../../../components/admin/RichEditor';
 import { BlogPost } from '../../../../types';
-import { isAuthenticated } from '../../../../lib/auth';
 import { Layout, Image as ImageIcon, Upload, X, AlertCircle, FileText, Settings } from 'lucide-react';
 
 export default function BlogEditorPage() {
@@ -20,11 +19,6 @@ export default function BlogEditorPage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push('/login');
-      return;
-    }
-
     const fetchBlog = async () => {
       if (!supabase || !id) return;
       try {

@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { isAuthenticated } from '../lib/auth';
 import { LayoutDashboard, User as UserIcon, Menu, X, ArrowRight, Github } from 'lucide-react';
 
 const Navbar: React.FC = () => {
@@ -18,8 +17,17 @@ const Navbar: React.FC = () => {
   const isAdminPath = useMemo(() => pathname?.startsWith('/admin'), [pathname]);
 
   useEffect(() => {
-    setMounted(true);
-    setIsAuth(isAuthenticated());
+    const checkAuth = async () => {
+      setMounted(true);
+      try {
+        const res = await fetch('/api/auth/me', { cache: 'no-store' });
+        setIsAuth(res.ok);
+      } catch {
+        setIsAuth(false);
+      }
+    };
+
+    checkAuth();
   }, []);
 
   useEffect(() => {

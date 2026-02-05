@@ -1,42 +1,56 @@
-
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { loginAdmin, isAuthenticated } from '../../lib/auth';
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    if (isAuthenticated()) {
-      router.push('/admin');
-    }
+    const checkSession = async () => {
+      const response = await fetch('/api/auth/me', { cache: 'no-store' });
+      if (response.ok) {
+        router.push('/admin');
+      }
+    };
+
+    checkSession();
   }, [router]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
-    if (username.trim().length < 3 || password.trim().length < 8) {
+    if (!email.trim() || password.trim().length < 8) {
       setError('Input tidak valid.');
       setIsLoading(false);
       return;
     }
 
-    setTimeout(() => {
-      const success = loginAdmin(username, password);
-      if (success) {
-        router.push('/admin');
-      } else {
-        setError('Username atau Password salah.');
-        setIsLoading(false);
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password: password.trim() }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        setError(payload?.error || 'Login gagal.');
+        return;
       }
-    }, 800);
+
+      router.push('/admin');
+      router.refresh();
+    } catch {
+      setError('Terjadi gangguan koneksi. Coba lagi.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -49,16 +63,16 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            <input 
-              type="text"
-              autoComplete="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Username"
+            <input
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Admin Email"
               className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-2 border-transparent focus:border-indigo-600 outline-none transition-all"
               required
             />
-            <input 
+            <input
               type="password"
               autoComplete="current-password"
               minLength={8}
@@ -69,7 +83,7 @@ export default function LoginPage() {
               required
             />
             {error && <p className="text-red-500 text-xs font-bold">{error}</p>}
-            <button type="submit" disabled={isLoading} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg">
+            <button type="submit" disabled={isLoading} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg disabled:opacity-70">
               {isLoading ? 'Loading...' : 'Sign In'}
             </button>
           </form>

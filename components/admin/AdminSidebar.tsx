@@ -8,7 +8,6 @@ import {
   Globe, LogOut, Award, X, Terminal
 } from 'lucide-react';
 import { DashboardTab } from '../../types';
-import { logoutAdmin } from '../../lib/auth';
 
 interface SidebarProps {
   activeTab: DashboardTab;
@@ -101,7 +100,7 @@ export default function AdminSidebar({ activeTab, onTabChange, isOpen, onClose }
         {/* Sidebar Footer */}
         <div className="p-6 mt-auto border-t border-slate-100 dark:border-slate-800">
           <button 
-            onClick={() => { logoutAdmin(); router.push('/'); }} 
+            onClick={async () => { await fetch('/api/auth/logout', { method: 'POST' }); router.push('/'); router.refresh(); }} 
             className="w-full flex items-center justify-center gap-3 px-4 py-3 text-xs font-black uppercase tracking-widest text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl transition-all group"
           >
             <LogOut size={16} className="group-hover:-translate-x-1 transition-transform" /> 

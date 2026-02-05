@@ -1,6 +1,8 @@
 'use server';
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
+import { getVerifiedAdminFromCookies } from '../../lib/server-auth';
 
 type MutableTable = 'projects' | 'blogs' | 'certifications' | 'profiles';
 const MUTABLE_TABLES: MutableTable[] = ['projects', 'blogs', 'certifications', 'profiles'];
@@ -25,8 +27,18 @@ const assertTable = (table: string): MutableTable => {
   return table as MutableTable;
 };
 
+const assertAdminSession = async () => {
+  const cookieStore = cookies();
+  const { user } = await getVerifiedAdminFromCookies(cookieStore);
+
+  if (!user) {
+    throw new Error('Unauthorized action.');
+  }
+};
+
 export async function deleteRecord(table: string, id: string) {
   try {
+    await assertAdminSession();
     const safeTable = assertTable(table);
     const supabase = getSupabase();
     const queryId = safeTable === 'profiles' ? Number.parseInt(id, 10) : id;
@@ -53,6 +65,7 @@ export async function deleteRecord(table: string, id: string) {
 
 export async function toggleBlogFeature(id: string, field: 'is_headline' | 'is_trending', value: boolean) {
   try {
+    await assertAdminSession();
     const supabase = getSupabase();
     const { error } = await supabase.from('blogs').update({ [field]: value }).eq('id', id);
     if (error) throw error;
@@ -69,6 +82,7 @@ export async function toggleBlogFeature(id: string, field: 'is_headline' | 'is_t
 
 export async function updateProfile(profileData: Record<string, unknown>) {
   try {
+    await assertAdminSession();
     const supabase = getSupabase();
     const { error } = await supabase.from('profiles').upsert(profileData);
     if (error) throw error;
