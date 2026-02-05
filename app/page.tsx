@@ -1,22 +1,21 @@
 
-import React, { Suspense } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { supabase } from '../lib/supabase';
 import { INITIAL_PROFILE } from '../constants';
-import { Project, BlogPost, Profile, Certification } from '../types';
 import { ArrowUpRight, Award, ShieldCheck, Activity } from 'lucide-react';
-import Skeleton from '../components/Skeleton';
+import { unstable_cache } from 'next/cache';
 
 const HomeRadarChart = dynamic(() => import('../components/HomeRadarChart'), { 
   ssr: false,
   loading: () => <div className="w-full h-full flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-full animate-pulse"></div>
 });
 
-export const revalidate = 60;
+export const revalidate = 300;
 
-async function getHomeData() {
+const getHomeData = unstable_cache(async () => {
   if (!supabase) return { projects: [], blogs: [], certs: [], profile: INITIAL_PROFILE };
   
   // Parallel fetching untuk efisiensi maksimal
@@ -33,7 +32,7 @@ async function getHomeData() {
     certs: (certsRes.data || []).map((c: any) => ({ ...c, imageUrl: c.image_url })),
     profile: profileRes.data || INITIAL_PROFILE
   };
-}
+}, ['home-page-data'], { revalidate });
 
 export default async function HomePage() {
   const { projects, blogs, certs, profile } = await getHomeData();
@@ -114,7 +113,16 @@ export default async function HomePage() {
               <div key={cert.id} className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] hover:shadow-xl transition-all group flex flex-col gap-4">
                 <div className="flex justify-between items-start">
                   <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center p-2 group-hover:rotate-6 transition-transform">
-                    {cert.imageUrl ? <img src={cert.imageUrl} alt={cert.issuer} className="w-full h-full object-contain" /> : <Award className="text-indigo-600" size={24} />}
+                    {cert.imageUrl ? (
+                      <Image
+                        src={cert.imageUrl}
+                        alt={cert.issuer}
+                        width={48}
+                        height={48}
+                        sizes="48px"
+                        className="w-full h-full object-contain"
+                      />
+                    ) : <Award className="text-indigo-600" size={24} />}
                   </div>
                   <ShieldCheck className="text-emerald-500" size={18} />
                 </div>
