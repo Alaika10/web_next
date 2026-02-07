@@ -36,6 +36,8 @@ Buat file bernama `.env.local` di akar folder proyek Anda dan isi dengan kunci A
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+ADMIN_EMAILS=admin1@email.com,admin2@email.com
 
 # Google Gemini AI Configuration
 API_KEY=your-google-ai-studio-key
@@ -93,9 +95,9 @@ Buka [http://localhost:3000](http://localhost:3000) di browser Anda.
 
 ## 🔐 Akses Admin (CMS)
 Untuk mengelola konten, navigasikan ke rute `/login`.
-- **URL**: `localhost:3000/#/login`
-- **Default Username**: `admin`
-- **Default Password**: `admin123` atau `zenith`
+- **URL**: `localhost:3000/login`
+- Login menggunakan **Supabase Auth (Email + Password)**
+- Hanya email yang ada pada env `ADMIN_EMAILS` yang bisa masuk ke route admin
 
 ### Cara Menggunakan Fitur CRUD & AI:
 1. **Blog**: Klik "Tambah Artikel", tulis judul saja, lalu gunakan tombol **"✨ AI Auto-Draft"** untuk membiarkan Gemini menulis isi artikel lengkap beserta summary-nya.

@@ -6,7 +6,6 @@ import { supabase } from '../../../../lib/supabase';
 import { processContent } from '../../../../services/contentProcessor';
 import RichEditor from '../../../../components/admin/RichEditor';
 import { Project } from '../../../../types';
-import { isAuthenticated } from '../../../../lib/auth';
 import { Briefcase } from 'lucide-react';
 
 export default function ProjectEditorPage() {
@@ -18,11 +17,6 @@ export default function ProjectEditorPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push('/login');
-      return;
-    }
-
     const fetchProject = async () => {
       if (!supabase || !id) return;
       try {
