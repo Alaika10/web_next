@@ -4,8 +4,8 @@ import { useRouter } from 'next/navigation';
 import { Profile, Project, BlogPost, Certification, DashboardTab } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { INITIAL_PROFILE } from '../../constants';
-import { Menu, Terminal, CheckCircle2, AlertTriangle, Info } from 'lucide-react';
-import { deleteRecord, toggleBlogFeature, updateProfile } from './actions';
+import { Menu, Terminal } from 'lucide-react';
+import { deleteRecord, toggleBlogFeature } from './actions';
 
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import AdminHeader from '../../components/admin/AdminHeader';
