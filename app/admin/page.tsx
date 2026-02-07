@@ -4,8 +4,8 @@ import { useRouter } from 'next/navigation';
 import { Profile, Project, BlogPost, Certification, DashboardTab } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { INITIAL_PROFILE } from '../../constants';
-import { Menu, Terminal } from 'lucide-react';
-import { deleteRecord, toggleBlogFeature } from './actions';
+import { Menu, Terminal, CheckCircle2, AlertTriangle, Info as InfoIcon } from 'lucide-react';
+import * as adminActions from './actions';
 
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import AdminHeader from '../../components/admin/AdminHeader';
@@ -94,7 +94,7 @@ export default function AdminPage() {
   const handleDelete = async (table: string, id: string) => {
     if (!confirm('Delete permanently?')) return;
     setIsSaving(true);
-    const result = await deleteRecord(table, id);
+    const result = await adminActions.deleteRecord(table, id);
     if (result.success) {
       if (table === 'projects') setProjects(prev => prev.filter(p => p.id !== id));
       else if (table === 'blogs') setBlogs(prev => prev.filter(b => b.id !== id));
@@ -111,7 +111,7 @@ export default function AdminPage() {
     const post = blogs.find(b => b.id === id);
     if (!post) return;
 
-    const result = await toggleBlogFeature(id, field, !post[type]);
+    const result = await adminActions.toggleBlogFeature(id, field, !post[type]);
     if (result.success) {
       setBlogs(prev => prev.map(b => b.id === id ? { ...b, [type]: !b[type] } : b));
       setNotice({ type: 'success', message: 'Blog feature updated.' });
@@ -130,7 +130,7 @@ export default function AdminPage() {
     if (!isProfileDirty) return;
     setIsSaving(true);
 
-    const payload: Record<string, unknown> = {
+    const payload = {
       id: profile.id,
       name: profile.name,
       title: profile.title,
@@ -141,7 +141,7 @@ export default function AdminPage() {
       socials: profile.socials,
     };
 
-    const result = await updateProfile(payload);
+    const result = await adminActions.updateProfile(payload);
     if (result.success) {
       setIsProfileDirty(false);
       setNotice({ type: 'success', message: 'Profile successfully saved to database.' });
@@ -192,7 +192,7 @@ export default function AdminPage() {
               }`}>
                 {notice.type === 'success' && <CheckCircle2 size={16} />}
                 {notice.type === 'error' && <AlertTriangle size={16} />}
-                {notice.type === 'info' && <Info size={16} />}
+                {notice.type === 'info' && <InfoIcon size={16} />}
                 <span>{notice.message}</span>
               </div>
             )}
