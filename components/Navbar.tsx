@@ -82,13 +82,13 @@ const Navbar: React.FC = () => {
       >
         <div className="max-w-7xl mx-auto flex justify-between items-center px-6 md:px-12 h-14">
           <Link href="/" className="flex items-center gap-3 group relative z-[160] active:scale-95 transition-transform">
-            <div className="relative w-9 h-9 rounded-xl overflow-hidden shadow-[0_8px_16px_-4px_rgba(79,70,229,0.4)] group-hover:rotate-6 transition-transform">
+             <div className="relative w-9 h-9 group-hover:rotate-6 transition-transform">
               <Image
                 src="/logo.png"
                 alt="DataLabs logo"
                 fill
                 sizes="36px"
-                className="object-cover"
+                className="object-contain"
                 priority
               />
             </div>
