@@ -27,11 +27,14 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     const ogImageUrl = `/api/og/project/${id}`;
 
     return {
+      alternates: { canonical: `/projects/${id}` },
       title: project.title,
       description: project.description,
       openGraph: {
         title: project.title,
         description: project.description,
+        type: 'article',
+        url: `/projects/${id}`,
         images: [{ url: ogImageUrl, width: 1200, height: 630 }],
       },
       twitter: {
@@ -42,7 +45,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       },
     };
   } catch (e) {
-    return { title: 'Project Detail' };
+    return { title: 'Project Detail', alternates: { canonical: `/projects/${id}` } };
   }
 }
 
