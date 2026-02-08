@@ -21,7 +21,7 @@ const Footer: React.FC = () => {
           <a href="#" className="text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors">HuggingFace</a>
         </div>
         <div className="text-slate-400 text-xs">
-          © {new Date().getFullYear()} Alex Sterling. All Rights Reserved.
+          © {new Date().getFullYear()} Alaika Izatul Ilmi . All Rights Reserved.
         </div>
       </div>
     </footer>
