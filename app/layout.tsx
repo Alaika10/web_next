@@ -23,16 +23,16 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-const deploymentUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://datalab.alex.studio';
+const deploymentUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://alexdatalabs.vercel.app';
 const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname : '';
 
 export const metadata: Metadata = {
   metadataBase: new URL(deploymentUrl),
   title: {
-    default: 'DataLabs by Alex',
+    default: 'DataLabs by Alaika Izatul Ilmi',
     template: '%s | DataLabs',
   },
-  description: 'Building intelligent systems with rigor and precision. Expert in Deep Learning and Predictive Analytics.',
+  description: 'Alaika digital Labs website showcasing projects, technical skills, and professional experience in web development and computer science. Built with a focus on performance, clean architecture, and scalability, this site highlights real-world projects, technical blogs, and certifications while delivering a fast, responsive, and user-friendly experience.',
   icons: {
     icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧬</text></svg>',
   },
