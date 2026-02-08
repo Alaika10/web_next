@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'DataLabs by Alex',
+    title: 'DataLabs by Alaika Izatul Ilmi',
     description: 'Alaika digital Labs website showcasing projects, technical skills, and professional experience in web development and computer science. Built with a focus on performance, clean architecture, and scalability, this site highlights real-world projects, technical blogs, and certifications while delivering a fast, responsive, and user-friendly experience.',
     url: deploymentUrl,
     siteName: 'DataLabs by Alaika Izatul Ilmi',
