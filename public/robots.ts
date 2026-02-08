@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: '/admin/',
     },
-    sitemap: 'https://datalab.alex.studio/sitemap.xml',
+    sitemap: 'https://alexdatalabs.vercel.app/sitemap.xml',
   };
 }
