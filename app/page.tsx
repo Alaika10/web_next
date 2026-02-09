@@ -3,9 +3,11 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
+import { access } from 'node:fs/promises';
+import path from 'node:path';
 import { supabase } from '../lib/supabase';
 import { INITIAL_PROFILE } from '../constants';
-import { ArrowUpRight, Award, ShieldCheck, Activity } from 'lucide-react';
+import { ArrowUpRight, Award, ShieldCheck, Activity, Download } from 'lucide-react';
 import { unstable_cache } from 'next/cache';
 
 const HomeRadarChart = dynamic(() => import('../components/HomeRadarChart'), { 
@@ -36,9 +38,11 @@ const getHomeData = unstable_cache(async () => {
 
 export default async function HomePage() {
   const { projects, blogs, certs, profile } = await getHomeData();
+  const cvPath = path.join(process.cwd(), 'public', 'cv.pdf');
+  const hasCv = await access(cvPath).then(() => true).catch(() => false);
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden">
+    <div className="relative min-h-screen overflow-x-hidden bg-gradient-to-r from-slate-50 via-indigo-50 to-violet-100">
       <div className="space-y-24 py-8 px-6 md:px-12 max-w-7xl mx-auto pb-24">
         {/* HERO */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center pt-2 md:pt-6">
@@ -67,6 +71,15 @@ export default async function HomePage() {
               <Link href="/projects" className="px-6 py-3.5 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center gap-2">
                 Explore Repository <ArrowUpRight size={16} />
               </Link>
+              {hasCv ? (
+                <a href="/cv.pdf" download className="px-6 py-3.5 bg-white/90 text-indigo-700 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-indigo-200 hover:bg-white transition-all flex items-center gap-2">
+                  Lihat CV <Download size={16} />
+                </a>
+              ) : (
+                <button type="button" disabled className="px-6 py-3.5 bg-slate-100 text-slate-500 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-slate-200 cursor-not-allowed flex items-center gap-2">
+                  CV belum tersedia <Download size={16} />
+                </button>
+              )}
             </div>
           </div>
           <div className="lg:col-span-5 xl:col-span-4 relative flex items-center justify-center min-h-[350px]">
@@ -79,7 +92,12 @@ export default async function HomePage() {
         {/* PROJECTS */}
         <section className="space-y-10">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-            <h2 className="text-3xl md:text-4xl font-black tracking-tighter">Selected Models.</h2>
+            <div className="space-y-2">
+              <h2 className="text-3xl md:text-4xl font-black tracking-tighter">Selected Models.</h2>
+              <p className="text-sm text-slate-600 dark:text-slate-400 max-w-2xl">
+                Koleksi proyek unggulan yang menampilkan implementasi teknologi dan pendekatan problem-solving terbaru.
+              </p>
+            </div>
             <Link href="/projects" className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:underline">View All</Link>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -107,6 +125,9 @@ export default async function HomePage() {
               <Activity size={12} className="animate-pulse" /> Verified_Credentials
             </div>
             <h2 className="text-3xl md:text-4xl font-black tracking-tighter">Verified Authority.</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400 max-w-2xl">
+              Ringkasan sertifikasi profesional yang memvalidasi kompetensi teknis dan kredibilitas keahlian.
+            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {certs.map((cert) => (
@@ -137,8 +158,11 @@ export default async function HomePage() {
 
         {/* BLOG */}
         <section className="space-y-10">
-          <div className="border-b border-slate-200 dark:border-slate-800 pb-8">
+          <div className="border-b border-slate-200 dark:border-slate-800 pb-8 space-y-2">
             <h2 className="text-3xl md:text-4xl font-black tracking-tighter">The Data Journal.</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400 max-w-2xl">
+              Catatan insight, pembelajaran, dan eksplorasi topik data, AI, serta pengembangan produk digital.
+            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             {blogs.map(post => (
