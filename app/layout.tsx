@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     description: 'Alaika digital Labs website showcasing projects, technical skills, and professional experience in web development and computer science. Built with a focus on performance, clean architecture, and scalability, this site highlights real-world projects, technical blogs, and certifications while delivering a fast, responsive, and user-friendly experience.',
   },
   icons: {
-    icon: [
+     icon: [
       { url: '/favicon.ico?v=2', type: 'image/x-icon' },
     ],
     shortcut: [{ url: '/favicon.ico?v=2', type: 'image/x-icon' }],
