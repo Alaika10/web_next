@@ -38,7 +38,7 @@ export default async function HomePage() {
   const { projects, blogs, certs, profile } = await getHomeData();
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden">
+    <div className="relative min-h-screen overflow-x-hidden bg-gradient-to-r from-slate-50 via-indigo-50 to-violet-100">
       <div className="space-y-24 py-8 px-6 md:px-12 max-w-7xl mx-auto pb-24">
         {/* HERO */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center pt-2 md:pt-6">
