@@ -84,9 +84,34 @@ export default function AdminPage() {
   };
 
   const addBlog = async () => {
-    if (!supabase) return;
+    if (!supabase) {
+      setNotice({ type: 'error', message: 'Supabase is not configured yet.' });
+      return;
+    }
     setIsSaving(true);
-    const { data } = await supabase.from('blogs').insert([{ title: 'New Entry', excerpt: 'Draft...', content: '# Start writing', author: profile.name, date: new Date().toISOString().split('T')[0] }]).select('id').single();
+    const { data, error } = await supabase
+      .from('blogs')
+      .insert([
+        {
+          title: 'New Entry',
+          excerpt: 'Draft...',
+          content: '# Start writing',
+          content_html: '<p># Start writing</p>',
+          image_url: '',
+          tags: [],
+          author: profile.name || 'Anonymous',
+          date: new Date().toISOString().split('T')[0],
+        },
+      ])
+      .select('id')
+      .single();
+
+    if (error) {
+      setNotice({ type: 'error', message: error.message || 'Failed to create new blog.' });
+      setIsSaving(false);
+      return;
+    }
+
     if (data) router.push(`/admin/blogs/${data.id}`);
     setIsSaving(false);
   };
