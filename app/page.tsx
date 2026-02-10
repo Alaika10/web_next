@@ -52,8 +52,8 @@ export default async function HomePage() {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-600"></span>
                 <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-indigo-400 opacity-75"></span>
               </span>
-              <span className="font-mono text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">
-                System_Node: Online / Latency: Optimal
+              <span className="font-mono text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">
+                Terbuka untuk Kolaborasi dan Proyek Baru
               </span>
             </div>
             <div className="space-y-3">
@@ -64,7 +64,7 @@ export default async function HomePage() {
                 </span>
               </h1>
               <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-xl leading-relaxed">
-                {profile.about}
+               Alaika digital Labs website showcasing projects, technical skills, and professional experience in web development and computer science. Built with a focus on performance, clean architecture, and scalability, this site highlights real-world projects, technical blogs, and certifications while delivering a fast, responsive, and user-friendly experience.
               </p>
             </div>
             <div className="flex flex-wrap gap-3 pt-2">
