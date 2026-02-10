@@ -178,13 +178,13 @@ export default function AdminPage() {
   };
 
   if (loading) return (
-    <div className="h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+    <div className="-mt-20 min-h-[calc(100svh+5rem)] flex items-center justify-center bg-slate-50 dark:bg-slate-950">
       <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
+    <div className="-mt-20 min-h-[calc(100svh+5rem)] flex bg-slate-50 dark:bg-slate-950 overflow-hidden">
       <AdminSidebar activeTab={activeTab} onTabChange={(tab) => { setActiveTab(tab); setIsSidebarOpen(false); }} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
         <div className="lg:hidden flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border-b shrink-0">

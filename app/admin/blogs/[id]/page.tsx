@@ -90,7 +90,7 @@ export default function BlogEditorPage() {
   };
 
   if (loading) return (
-    <div className="h-screen flex flex-col items-center justify-center gap-4 bg-slate-50 dark:bg-slate-950">
+    <div className="-mt-20 min-h-[calc(100svh+5rem)] flex flex-col items-center justify-center gap-4 bg-slate-50 dark:bg-slate-950">
        <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Opening Journal Vault...</p>
     </div>
@@ -99,7 +99,7 @@ export default function BlogEditorPage() {
   if (!blog) return <div className="p-20 text-center font-black uppercase text-red-500">Record not found.</div>;
 
   return (
-    <div className="h-screen flex flex-col bg-slate-50 dark:bg-slate-950 overflow-hidden">
+    <div className="-mt-20 min-h-[calc(100svh+5rem)] flex flex-col bg-slate-50 dark:bg-slate-950 overflow-hidden">
       <div className="max-w-[1600px] mx-auto w-full flex-1 flex flex-col gap-6 p-6 lg:p-10 h-full">
         
         <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
