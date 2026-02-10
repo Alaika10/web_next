@@ -63,7 +63,14 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
 
   const currentProject: Project = {
     ...project,
-    imageUrl: project.image_url
+    imageUrl: project.image_url,
+    demoUrl: project.demo_url || project.deploy_demo_url || project.link,
+    githubUrl: project.github_url || project.git_url || project.repository_url,
+    metrics: Array.isArray(project.metrics)
+      ? project.metrics
+      : Array.isArray(project.matrix)
+        ? project.matrix
+        : []
   };
 
   return (
@@ -93,18 +100,29 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
 
           <div className="lg:col-span-4 flex flex-col justify-end gap-6">
             <div className="p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] space-y-6 shadow-sm">
-               <div className="flex items-center justify-between">
-                 <span className="font-mono-tech text-[10px] uppercase text-slate-400">System Accuracy</span>
-                 <span className="font-mono-tech text-xs font-black text-emerald-500">98.4%</span>
+               <div className="space-y-2">
+                 {currentProject.metrics && currentProject.metrics.length > 0 ? (
+                   currentProject.metrics.slice(0, 2).map((metric, idx) => (
+                     <div key={`${metric.label}-${idx}`} className="flex items-center justify-between">
+                       <span className="font-mono-tech text-[10px] uppercase text-slate-400">{metric.label}</span>
+                       <span className="font-mono-tech text-xs font-black text-emerald-500">{metric.value}</span>
+                     </div>
+                   ))
+                 ) : (
+                   <div className="flex items-center justify-between">
+                     <span className="font-mono-tech text-[10px] uppercase text-slate-400">System Accuracy</span>
+                     <span className="font-mono-tech text-xs font-black text-emerald-500">98.4%</span>
+                   </div>
+                 )}
                </div>
                <div className="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                  <div className="w-[98%] h-full bg-emerald-500"></div>
                </div>
                <div className="flex gap-4">
-                 <a href={currentProject.link} className="flex-1 flex items-center justify-center gap-2 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all">
+                 <a href={currentProject.demoUrl || currentProject.link || '#'} className="flex-1 flex items-center justify-center gap-2 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all">
                    Deploy <ExternalLink size={12} />
                  </a>
-                 <a href="#" className="w-14 h-14 flex items-center justify-center border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-400 hover:text-indigo-600 hover:border-indigo-600 transition-all">
+                 <a href={currentProject.githubUrl || '#'} className="w-14 h-14 flex items-center justify-center border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-400 hover:text-indigo-600 hover:border-indigo-600 transition-all">
                    <Github size={20} />
                  </a>
                </div>
