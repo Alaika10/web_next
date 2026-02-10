@@ -41,10 +41,10 @@ export default function AdminPage() {
       }
       try {
         const [p, projs, b, certs] = await Promise.all([
-          supabase.from('profiles').select('*').maybeSingle(),
+          supabase.from('profiles').select('id, name, title, about, avatar, skills, experience, socials').maybeSingle(),
           supabase.from('projects').select('id, title, description, image_url, created_at, technologies').order('created_at', { ascending: false }),
           supabase.from('blogs').select('id, title, excerpt, date, author, image_url, is_headline, is_trending').order('date', { ascending: false }),
-          supabase.from('certifications').select('*').order('issue_date', { ascending: false })
+          supabase.from('certifications').select('id, title, issuer, issue_date, image_url, credential_url, description').order('issue_date', { ascending: false }).limit(50)
         ]);
 
         if (p.data) setProfile(p.data);
@@ -84,9 +84,34 @@ export default function AdminPage() {
   };
 
   const addBlog = async () => {
-    if (!supabase) return;
+    if (!supabase) {
+      setNotice({ type: 'error', message: 'Supabase is not configured yet.' });
+      return;
+    }
     setIsSaving(true);
-    const { data } = await supabase.from('blogs').insert([{ title: 'New Entry', excerpt: 'Draft...', content: '# Start writing', author: profile.name, date: new Date().toISOString().split('T')[0] }]).select('id').single();
+    const { data, error } = await supabase
+      .from('blogs')
+      .insert([
+        {
+          title: 'New Entry',
+          excerpt: 'Draft...',
+          content: '# Start writing',
+          content_html: '<p># Start writing</p>',
+          image_url: '',
+          tags: [],
+          author: profile.name || 'Anonymous',
+          date: new Date().toISOString().split('T')[0],
+        },
+      ])
+      .select('id')
+      .single();
+
+    if (error) {
+      setNotice({ type: 'error', message: error.message || 'Failed to create new blog.' });
+      setIsSaving(false);
+      return;
+    }
+
     if (data) router.push(`/admin/blogs/${data.id}`);
     setIsSaving(false);
   };
@@ -153,13 +178,13 @@ export default function AdminPage() {
   };
 
   if (loading) return (
-    <div className="h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+    <div className="-mt-20 min-h-[calc(100svh+5rem)] flex items-center justify-center bg-slate-50 dark:bg-slate-950">
       <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
+    <div className="-mt-20 min-h-[calc(100svh+5rem)] flex bg-slate-50 dark:bg-slate-950 overflow-hidden">
       <AdminSidebar activeTab={activeTab} onTabChange={(tab) => { setActiveTab(tab); setIsSidebarOpen(false); }} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
         <div className="lg:hidden flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border-b shrink-0">

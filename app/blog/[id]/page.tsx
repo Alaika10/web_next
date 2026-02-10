@@ -21,12 +21,26 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   if (!supabase) return {};
   const { data: post } = await supabase.from('blogs').select('title, excerpt').eq('id', params.id).single();
   if (!post) return { title: 'Not Found' };
+
+  const ogImageUrl = `/api/og/blog/${params.id}`;
+
   return {
     title: post.title,
     description: post.excerpt,
     alternates: { canonical: `/blog/${params.id}` },
-    openGraph: { title: post.title, description: post.excerpt, type: 'article', url: `/blog/${params.id}` },
-    twitter: { card: 'summary_large_image', title: post.title, description: post.excerpt },
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      type: 'article',
+      url: `/blog/${params.id}`,
+      images: [{ url: ogImageUrl, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.excerpt,
+      images: [ogImageUrl],
+    },
   };
 }
 
