@@ -27,7 +27,11 @@ export default function BlogEditorPage() {
         if (data) {
           setBlog({
             ...data,
-            imageUrl: data.image_url // Mapping snake_case from DB to camelCase
+            imageUrl: data.image_url || '',
+            content: data.content || '',
+            excerpt: data.excerpt || '',
+            author: data.author || 'Anonymous',
+            tags: Array.isArray(data.tags) ? data.tags : []
           });
         }
       } catch (err) {
@@ -112,13 +116,6 @@ export default function BlogEditorPage() {
               <FileText size={16} className="text-indigo-600" />
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Draft_Mode</span>
             </div>
-            <button 
-              onClick={handleSave}
-              disabled={isSaving}
-              className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center gap-2"
-            >
-              {isSaving ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : 'Commit_Journal'}
-            </button>
           </div>
         </header>
 
