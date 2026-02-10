@@ -9,6 +9,7 @@ import SocialShare from '../../../components/SocialShare';
 import BlogClientActions from '../../../components/BlogClientActions';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
+import { getSiteUrl } from '../../../lib/site';
 
 // Static Site Generation: Membuat halaman detail menjadi HTML statis saat build
 export async function generateStaticParams() {
@@ -22,7 +23,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const { data: post } = await supabase.from('blogs').select('title, excerpt').eq('id', params.id).single();
   if (!post) return { title: 'Not Found' };
 
-  const ogImageUrl = `/api/og/blog/${params.id}`;
+  const siteUrl = getSiteUrl();
+  const ogImageUrl = `${siteUrl}/api/og/blog/${params.id}`;
 
   return {
     title: post.title,
@@ -32,7 +34,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       title: post.title,
       description: post.excerpt,
       type: 'article',
-      url: `/blog/${params.id}`,
+      url: `${siteUrl}/blog/${params.id}`,
       images: [{ url: ogImageUrl, width: 1200, height: 630 }],
     },
     twitter: {

@@ -10,6 +10,7 @@ import Image from 'next/image';
 import SocialShare from '../../../components/SocialShare';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
+import { getSiteUrl } from '../../../lib/site';
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const { id } = params;
@@ -24,7 +25,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 
     if (!project) return { title: 'Project Not Found' };
 
-    const ogImageUrl = `/api/og/project/${id}`;
+    const siteUrl = getSiteUrl();
+    const ogImageUrl = `${siteUrl}/api/og/project/${id}`;
 
     return {
       alternates: { canonical: `/projects/${id}` },
@@ -34,7 +36,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
         title: project.title,
         description: project.description,
         type: 'article',
-        url: `/projects/${id}`,
+        url: `${siteUrl}/projects/${id}`,
         images: [{ url: ogImageUrl, width: 1200, height: 630 }],
       },
       twitter: {
