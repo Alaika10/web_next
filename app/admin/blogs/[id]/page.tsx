@@ -22,7 +22,11 @@ export default function BlogEditorPage() {
     const fetchBlog = async () => {
       if (!supabase || !id) return;
       try {
-        const { data, error } = await supabase.from('blogs').select('*').eq('id', id).single();
+        const { data, error } = await supabase
+          .from('blogs')
+          .select('id, title, excerpt, content, image_url, tags, author, date')
+          .eq('id', id)
+          .single();
         if (error) throw error;
         if (data) {
           setBlog({

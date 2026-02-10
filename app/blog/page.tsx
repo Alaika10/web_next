@@ -14,7 +14,11 @@ export default async function BlogPage() {
 
   if (supabase) {
     try {
-      const { data, error } = await supabase.from('blogs').select('*').order('date', { ascending: false });
+      const { data, error } = await supabase
+        .from('blogs')
+        .select('id, title, excerpt, image_url, date, tags, is_headline, is_trending')
+        .order('date', { ascending: false })
+        .limit(24);
       if (error) throw error;
       if (data) {
         blogs = data.map((b: any) => ({

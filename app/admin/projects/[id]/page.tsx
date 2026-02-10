@@ -60,13 +60,18 @@ export default function ProjectEditorPage() {
       }
 
       try {
-        const { data, error } = await supabase.from('projects').select('*').eq('id', id).single();
+        const { data, error } = await supabase
+          .from('projects')
+          .select('id, title, description, content, image_url, technologies, created_at, demo_url, deploy_demo_url, link, github_url, git_url, repository_url, metrics, matrix')
+          .eq('id', id)
+          .single();
         if (error) throw error;
 
         if (data) {
           setProject({
             ...data,
             content: data.content || '',
+            createdAt: data.created_at || new Date().toISOString(),
             imageUrl: data.image_url || '',
             technologies: Array.isArray(data.technologies) ? data.technologies : [],
             demoUrl: data.demo_url || data.deploy_demo_url || data.link || '',

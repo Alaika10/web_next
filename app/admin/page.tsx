@@ -41,10 +41,10 @@ export default function AdminPage() {
       }
       try {
         const [p, projs, b, certs] = await Promise.all([
-          supabase.from('profiles').select('*').maybeSingle(),
+          supabase.from('profiles').select('id, name, title, about, avatar, skills, experience, socials').maybeSingle(),
           supabase.from('projects').select('id, title, description, image_url, created_at, technologies').order('created_at', { ascending: false }),
           supabase.from('blogs').select('id, title, excerpt, date, author, image_url, is_headline, is_trending').order('date', { ascending: false }),
-          supabase.from('certifications').select('*').order('issue_date', { ascending: false })
+          supabase.from('certifications').select('id, title, issuer, issue_date, image_url, credential_url, description').order('issue_date', { ascending: false }).limit(50)
         ]);
 
         if (p.data) setProfile(p.data);
