@@ -10,6 +10,7 @@ import Image from 'next/image';
 import SocialShare from '../../../components/SocialShare';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
+import { getSiteUrl } from '../../../lib/site';
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const { id } = params;
@@ -24,7 +25,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 
     if (!project) return { title: 'Project Not Found' };
 
-    const ogImageUrl = `/api/og/project/${id}`;
+    const siteUrl = getSiteUrl();
+    const ogImageUrl = `${siteUrl}/api/og/project/${id}`;
 
     return {
       alternates: { canonical: `/projects/${id}` },
@@ -34,7 +36,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
         title: project.title,
         description: project.description,
         type: 'article',
-        url: `/projects/${id}`,
+        url: `${siteUrl}/projects/${id}`,
         images: [{ url: ogImageUrl, width: 1200, height: 630 }],
       },
       twitter: {
@@ -53,19 +55,25 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
   const { id } = params;
   if (!supabase) return notFound();
 
-  const { data: project, error } = await supabase
-    .from('projects')
-    .select('*')
-    .eq('id', id)
-    .single();
+  const richColumns = 'id, title, description, content, content_html, image_url, technologies, created_at, link, demo_url, deploy_demo_url, github_url, git_url, repository_url, metrics, matrix';
+  const safeColumns = 'id, title, description, content, content_html, image_url, technologies, created_at, link, metrics, matrix';
+
+  let query = await supabase.from('projects').select(richColumns).eq('id', id).single();
+  const isMissingColumn = query.error?.message?.toLowerCase().includes('does not exist');
+  if (isMissingColumn) {
+    query = await supabase.from('projects').select(safeColumns).eq('id', id).single();
+  }
+
+  const { data: project, error } = query;
 
   if (error || !project) return notFound();
 
   const currentProject: Project = {
     ...project,
     imageUrl: project.image_url,
-    demoUrl: project.demo_url || project.deploy_demo_url || project.link,
-    githubUrl: project.github_url || project.git_url || project.repository_url,
+    createdAt: project.created_at || new Date().toISOString(),
+    demoUrl: (project as any).demo_url || (project as any).deploy_demo_url || project.link,
+    githubUrl: (project as any).github_url || (project as any).git_url || (project as any).repository_url || '',
     metrics: Array.isArray(project.metrics)
       ? project.metrics
       : Array.isArray(project.matrix)

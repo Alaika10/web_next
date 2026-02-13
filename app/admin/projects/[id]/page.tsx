@@ -60,17 +60,33 @@ export default function ProjectEditorPage() {
       }
 
       try {
-        const { data, error } = await supabase.from('projects').select('*').eq('id', id).single();
-        if (error) throw error;
+        const richColumns = 'id, title, description, content, image_url, technologies, created_at, link, demo_url, deploy_demo_url, github_url, git_url, repository_url, metrics, matrix';
+        const safeColumns = 'id, title, description, content, image_url, technologies, created_at, link, metrics, matrix';
+
+        let query = await supabase
+          .from('projects')
+          .select(richColumns)
+          .eq('id', id)
+          .single();
+
+        const isMissingColumn = query.error?.message?.toLowerCase().includes('does not exist');
+        if (isMissingColumn) {
+          query = await supabase.from('projects').select(safeColumns).eq('id', id).single();
+        }
+
+        if (query.error) throw query.error;
+
+        const data = query.data;
 
         if (data) {
           setProject({
             ...data,
             content: data.content || '',
+            createdAt: data.created_at || new Date().toISOString(),
             imageUrl: data.image_url || '',
             technologies: Array.isArray(data.technologies) ? data.technologies : [],
-            demoUrl: data.demo_url || data.deploy_demo_url || data.link || '',
-            githubUrl: data.github_url || data.git_url || data.repository_url || '',
+            demoUrl: (data as any).demo_url || (data as any).deploy_demo_url || data.link || '',
+            githubUrl: (data as any).github_url || (data as any).git_url || (data as any).repository_url || '',
             metrics: normalizeMetrics(data.metrics || data.matrix),
           });
         }
@@ -156,7 +172,7 @@ export default function ProjectEditorPage() {
 
   if (loading) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center gap-4 bg-slate-50 dark:bg-slate-950">
+      <div className="-mt-20 min-h-[calc(100svh+5rem)] flex flex-col items-center justify-center gap-4 bg-slate-50 dark:bg-slate-950">
         <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Opening Project Studio...</p>
       </div>
@@ -172,7 +188,7 @@ export default function ProjectEditorPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-slate-50 dark:bg-slate-950 overflow-hidden">
+    <div className="-mt-20 min-h-[calc(100svh+5rem)] flex flex-col bg-slate-50 dark:bg-slate-950 overflow-hidden">
       <div className="max-w-[1600px] mx-auto w-full flex-1 flex flex-col gap-6 p-6 lg:p-10 h-full">
         <header className="flex items-center justify-between gap-6">
           <div className="flex-1">
