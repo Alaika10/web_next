@@ -115,51 +115,7 @@ export default function AdminPage() {
     setIsSaving(false);
   };
 
-  const addCertification = async () => {
-    if (!supabase) {
-      setNotice({ type: 'error', message: 'Supabase is not configured yet.' });
-      return;
-    }
-
-    setIsSaving(true);
-    const now = new Date().toISOString().split('T')[0];
-
-    const { data, error } = await supabase
-      .from('certifications')
-      .insert([
-        {
-          title: 'New Certification',
-          issuer: 'Institution',
-          issue_date: now,
-          image_url: '',
-          credential_url: '',
-          description: 'Credential summary...',
-        },
-      ])
-      .select('id, title, issuer, issue_date, image_url, credential_url, description')
-      .single();
-
-    if (error) {
-      setNotice({ type: 'error', message: error.message || 'Failed to create certification.' });
-      setIsSaving(false);
-      return;
-    }
-
-    if (data) {
-      const normalizedCert: Certification = {
-        ...data,
-        issueDate: data.issue_date,
-        imageUrl: data.image_url,
-        credentialUrl: data.credential_url,
-      };
-      setCertifications((prev) => [normalizedCert, ...prev]);
-      setNotice({ type: 'success', message: 'Credential created.' });
-    }
-
-    setIsSaving(false);
-  };
-
-  const addCertification = async () => {
+  const createCertification = async () => {
     if (!supabase) {
       setNotice({ type: 'error', message: 'Supabase is not configured yet.' });
       return;
@@ -350,7 +306,7 @@ export default function AdminPage() {
               onAddProject={addProject}
               onAddBlog={addBlog}
               onSaveProfile={handleSaveProfile}
-              onAddCertification={addCertification}
+              onAddCertification={createCertification}
               canSaveProfile={isProfileDirty}
             />
 
@@ -373,7 +329,7 @@ export default function AdminPage() {
               {activeTab === DashboardTab.OVERVIEW && <OverviewTab projects={projects} blogs={blogs} onExploreJournal={() => setActiveTab(DashboardTab.BLOGS)} />}
               {activeTab === DashboardTab.PROJECTS && <ProjectsTab projects={projects} onDelete={(id) => handleDelete('projects', id)} />}
               {activeTab === DashboardTab.BLOGS && <JournalTab blogs={blogs} onDelete={(id) => handleDelete('blogs', id)} onToggleFeature={handleToggleBlog} />}
-              {activeTab === DashboardTab.CERTIFICATIONS && <CertificationsTab certs={certifications} onUpdate={handleCertificationUpdate} onDelete={(id) => handleDelete('certifications', id)} onAdd={addCertification} />}
+              {activeTab === DashboardTab.CERTIFICATIONS && <CertificationsTab certs={certifications} onUpdate={handleCertificationUpdate} onDelete={(id) => handleDelete('certifications', id)} onAdd={createCertification} />}
               {activeTab === DashboardTab.PROFILE && <ProfileTab profile={profile} onProfileChange={handleProfileChange} />}
             </div>
           </div>
