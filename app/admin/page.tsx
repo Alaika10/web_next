@@ -41,10 +41,10 @@ export default function AdminPage() {
       }
       try {
         const [p, projs, b, certs] = await Promise.all([
-          supabase.from('profiles').select('*').maybeSingle(),
+          supabase.from('profiles').select('id, name, title, about, avatar, skills, experience, socials').maybeSingle(),
           supabase.from('projects').select('id, title, description, image_url, created_at, technologies').order('created_at', { ascending: false }),
           supabase.from('blogs').select('id, title, excerpt, date, author, image_url, is_headline, is_trending').order('date', { ascending: false }),
-          supabase.from('certifications').select('*').order('issue_date', { ascending: false })
+          supabase.from('certifications').select('id, title, issuer, issue_date, image_url, credential_url, description').order('issue_date', { ascending: false }).limit(50)
         ]);
 
         if (p.data) setProfile(p.data);
@@ -76,19 +76,147 @@ export default function AdminPage() {
   }, [notice]);
 
   const addProject = async () => {
-    if (!supabase) return;
+    if (!supabase) {
+      setNotice({ type: 'error', message: 'Supabase is not configured yet.' });
+      return;
+    }
+
     setIsSaving(true);
-    const { data } = await supabase.from('projects').insert([{ title: 'Untitled Project', description: 'Draft...', technologies: [] }]).select('id').single();
-    if (data) router.push(`/admin/projects/${data.id}`);
+
+    const payload = {
+      title: 'Untitled Project',
+      description: 'Draft...',
+      content: '',
+      image_url: '',
+      technologies: [],
+      link: '',
+    };
+
+    const { data, error } = await supabase
+      .from('projects')
+      .insert([payload])
+      .select('id')
+      .single();
+
+    if (error) {
+      setNotice({ type: 'error', message: error.message || 'Failed to create new project.' });
+      setIsSaving(false);
+      return;
+    }
+
+    if (!data?.id) {
+      setNotice({ type: 'error', message: 'Project created but ID was not returned.' });
+      setIsSaving(false);
+      return;
+    }
+
+    setNotice({ type: 'success', message: 'Project created.' });
+    router.push(`/admin/projects/${data.id}`);
+    setIsSaving(false);
+  };
+
+  const addCertification = async () => {
+    if (!supabase) {
+      setNotice({ type: 'error', message: 'Supabase is not configured yet.' });
+      return;
+    }
+
+    setIsSaving(true);
+    const now = new Date().toISOString().split('T')[0];
+
+    const { data, error } = await supabase
+      .from('certifications')
+      .insert([
+        {
+          title: 'New Certification',
+          issuer: 'Institution',
+          issue_date: now,
+          image_url: '',
+          credential_url: '',
+          description: 'Credential summary...',
+        },
+      ])
+      .select('id, title, issuer, issue_date, image_url, credential_url, description')
+      .single();
+
+    if (error) {
+      setNotice({ type: 'error', message: error.message || 'Failed to create certification.' });
+      setIsSaving(false);
+      return;
+    }
+
+    if (data) {
+      const normalizedCert: Certification = {
+        ...data,
+        issueDate: data.issue_date,
+        imageUrl: data.image_url,
+        credentialUrl: data.credential_url,
+      };
+      setCertifications((prev) => [normalizedCert, ...prev]);
+      setNotice({ type: 'success', message: 'Credential created.' });
+    }
+
     setIsSaving(false);
   };
 
   const addBlog = async () => {
-    if (!supabase) return;
+    if (!supabase) {
+      setNotice({ type: 'error', message: 'Supabase is not configured yet.' });
+      return;
+    }
     setIsSaving(true);
-    const { data } = await supabase.from('blogs').insert([{ title: 'New Entry', excerpt: 'Draft...', content: '# Start writing', author: profile.name, date: new Date().toISOString().split('T')[0] }]).select('id').single();
+    const { data, error } = await supabase
+      .from('blogs')
+      .insert([
+        {
+          title: 'New Entry',
+          excerpt: 'Draft...',
+          content: '# Start writing',
+          content_html: '<p># Start writing</p>',
+          image_url: '',
+          tags: [],
+          author: profile.name || 'Anonymous',
+          date: new Date().toISOString().split('T')[0],
+        },
+      ])
+      .select('id')
+      .single();
+
+    if (error) {
+      setNotice({ type: 'error', message: error.message || 'Failed to create new blog.' });
+      setIsSaving(false);
+      return;
+    }
+
     if (data) router.push(`/admin/blogs/${data.id}`);
     setIsSaving(false);
+  };
+
+  const handleCertificationUpdate = async (id: string, updates: Partial<Certification>) => {
+    if (!supabase) {
+      setNotice({ type: 'error', message: 'Supabase is not configured yet.' });
+      return;
+    }
+
+    const payload: Record<string, unknown> = {};
+
+    if (Object.prototype.hasOwnProperty.call(updates, 'title')) payload.title = updates.title || '';
+    if (Object.prototype.hasOwnProperty.call(updates, 'issuer')) payload.issuer = updates.issuer || '';
+    if (Object.prototype.hasOwnProperty.call(updates, 'description')) payload.description = updates.description || '';
+    if (Object.prototype.hasOwnProperty.call(updates, 'issueDate')) payload.issue_date = updates.issueDate || null;
+    if (Object.prototype.hasOwnProperty.call(updates, 'imageUrl')) payload.image_url = updates.imageUrl || '';
+    if (Object.prototype.hasOwnProperty.call(updates, 'credentialUrl')) payload.credential_url = updates.credentialUrl || '';
+
+    if (Object.keys(payload).length === 0) return;
+
+    const { error } = await supabase.from('certifications').update(payload).eq('id', id);
+
+    if (error) {
+      setNotice({ type: 'error', message: error.message || 'Failed to update credential.' });
+      return;
+    }
+
+    setCertifications((prev) => prev.map((cert) => (cert.id === id ? { ...cert, ...updates } : cert)));
   };
 
   const handleDelete = async (table: string, id: string) => {
@@ -153,13 +281,13 @@ export default function AdminPage() {
   };
 
   if (loading) return (
-    <div className="h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+    <div className="-mt-20 min-h-[calc(100svh+5rem)] flex items-center justify-center bg-slate-50 dark:bg-slate-950">
       <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
+    <div className="-mt-20 min-h-[calc(100svh+5rem)] flex bg-slate-50 dark:bg-slate-950 overflow-hidden">
       <AdminSidebar activeTab={activeTab} onTabChange={(tab) => { setActiveTab(tab); setIsSidebarOpen(false); }} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
         <div className="lg:hidden flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border-b shrink-0">
@@ -178,7 +306,7 @@ export default function AdminPage() {
               onAddProject={addProject}
               onAddBlog={addBlog}
               onSaveProfile={handleSaveProfile}
-              onAddCertification={() => {}}
+              onAddCertification={addCertification}
               canSaveProfile={isProfileDirty}
             />
 
@@ -201,7 +329,7 @@ export default function AdminPage() {
               {activeTab === DashboardTab.OVERVIEW && <OverviewTab projects={projects} blogs={blogs} onExploreJournal={() => setActiveTab(DashboardTab.BLOGS)} />}
               {activeTab === DashboardTab.PROJECTS && <ProjectsTab projects={projects} onDelete={(id) => handleDelete('projects', id)} />}
               {activeTab === DashboardTab.BLOGS && <JournalTab blogs={blogs} onDelete={(id) => handleDelete('blogs', id)} onToggleFeature={handleToggleBlog} />}
-              {activeTab === DashboardTab.CERTIFICATIONS && <CertificationsTab certs={certifications} onUpdate={() => {}} onDelete={(id) => handleDelete('certifications', id)} onAdd={() => {}} />}
+              {activeTab === DashboardTab.CERTIFICATIONS && <CertificationsTab certs={certifications} onUpdate={handleCertificationUpdate} onDelete={(id) => handleDelete('certifications', id)} onAdd={addCertification} />}
               {activeTab === DashboardTab.PROFILE && <ProfileTab profile={profile} onProfileChange={handleProfileChange} />}
             </div>
           </div>
