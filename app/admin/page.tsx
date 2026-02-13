@@ -76,10 +76,86 @@ export default function AdminPage() {
   }, [notice]);
 
   const addProject = async () => {
-    if (!supabase) return;
+    if (!supabase) {
+      setNotice({ type: 'error', message: 'Supabase is not configured yet.' });
+      return;
+    }
+
     setIsSaving(true);
-    const { data } = await supabase.from('projects').insert([{ title: 'Untitled Project', description: 'Draft...', technologies: [] }]).select('id').single();
-    if (data) router.push(`/admin/projects/${data.id}`);
+
+    const payload = {
+      title: 'Untitled Project',
+      description: 'Draft...',
+      content: '',
+      image_url: '',
+      technologies: [],
+      link: '',
+    };
+
+    const { data, error } = await supabase
+      .from('projects')
+      .insert([payload])
+      .select('id')
+      .single();
+
+    if (error) {
+      setNotice({ type: 'error', message: error.message || 'Failed to create new project.' });
+      setIsSaving(false);
+      return;
+    }
+
+    if (!data?.id) {
+      setNotice({ type: 'error', message: 'Project created but ID was not returned.' });
+      setIsSaving(false);
+      return;
+    }
+
+    setNotice({ type: 'success', message: 'Project created.' });
+    router.push(`/admin/projects/${data.id}`);
+    setIsSaving(false);
+  };
+
+  const addCertification = async () => {
+    if (!supabase) {
+      setNotice({ type: 'error', message: 'Supabase is not configured yet.' });
+      return;
+    }
+
+    setIsSaving(true);
+    const now = new Date().toISOString().split('T')[0];
+
+    const { data, error } = await supabase
+      .from('certifications')
+      .insert([
+        {
+          title: 'New Certification',
+          issuer: 'Institution',
+          issue_date: now,
+          image_url: '',
+          credential_url: '',
+          description: 'Credential summary...',
+        },
+      ])
+      .select('id, title, issuer, issue_date, image_url, credential_url, description')
+      .single();
+
+    if (error) {
+      setNotice({ type: 'error', message: error.message || 'Failed to create certification.' });
+      setIsSaving(false);
+      return;
+    }
+
+    if (data) {
+      const normalizedCert: Certification = {
+        ...data,
+        issueDate: data.issue_date,
+        imageUrl: data.image_url,
+        credentialUrl: data.credential_url,
+      };
+      setCertifications((prev) => [normalizedCert, ...prev]);
+      setNotice({ type: 'success', message: 'Credential created.' });
+    }
+
     setIsSaving(false);
   };
 
