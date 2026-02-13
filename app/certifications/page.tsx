@@ -16,6 +16,7 @@ async function CertificationList() {
       .select('id, title, issuer, issue_date, image_url, credential_url, description')
       .order('issue_date', { ascending: false })
       .limit(30);
+
     if (data) {
       certs = data.map((c) => ({
         ...c,

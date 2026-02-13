@@ -76,42 +76,17 @@ export default function AdminPage() {
   }, [notice]);
 
   const addProject = async () => {
-    if (!supabase) {
-      setNotice({ type: 'error', message: 'Supabase is not configured yet.' });
-      return;
-    }
-
     setIsSaving(true);
 
-    const payload = {
-      title: 'Untitled Project',
-      description: 'Draft...',
-      content: '',
-      image_url: '',
-      technologies: [],
-      link: '',
-    };
-
-    const { data, error } = await supabase
-      .from('projects')
-      .insert([payload])
-      .select('id')
-      .single();
-
-    if (error) {
-      setNotice({ type: 'error', message: error.message || 'Failed to create new project.' });
-      setIsSaving(false);
-      return;
-    }
-
-    if (!data?.id) {
-      setNotice({ type: 'error', message: 'Project created but ID was not returned.' });
+    const result = await adminActions.createProject();
+    if (!result.success || !result.id) {
+      setNotice({ type: 'error', message: result.error || 'Failed to create new project.' });
       setIsSaving(false);
       return;
     }
 
     setNotice({ type: 'success', message: 'Project created.' });
-    router.push(`/admin/projects/${data.id}`);
+    router.push(`/admin/projects/${result.id}`);
     setIsSaving(false);
   };
 
