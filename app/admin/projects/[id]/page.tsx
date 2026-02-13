@@ -60,12 +60,23 @@ export default function ProjectEditorPage() {
       }
 
       try {
-        const { data, error } = await supabase
+        const richColumns = 'id, title, description, content, image_url, technologies, created_at, link, demo_url, deploy_demo_url, github_url, git_url, repository_url, metrics, matrix';
+        const safeColumns = 'id, title, description, content, image_url, technologies, created_at, link, metrics, matrix';
+
+        let query = await supabase
           .from('projects')
-          .select('id, title, description, content, image_url, technologies, created_at, link, metrics, matrix')
+          .select(richColumns)
           .eq('id', id)
           .single();
-        if (error) throw error;
+
+        const isMissingColumn = query.error?.message?.toLowerCase().includes('does not exist');
+        if (isMissingColumn) {
+          query = await supabase.from('projects').select(safeColumns).eq('id', id).single();
+        }
+
+        if (query.error) throw query.error;
+
+        const data = query.data;
 
         if (data) {
           setProject({
@@ -74,8 +85,8 @@ export default function ProjectEditorPage() {
             createdAt: data.created_at || new Date().toISOString(),
             imageUrl: data.image_url || '',
             technologies: Array.isArray(data.technologies) ? data.technologies : [],
-            demoUrl: data.link || '',
-            githubUrl: '',
+            demoUrl: (data as any).demo_url || (data as any).deploy_demo_url || data.link || '',
+            githubUrl: (data as any).github_url || (data as any).git_url || (data as any).repository_url || '',
             metrics: normalizeMetrics(data.metrics || data.matrix),
           });
         }

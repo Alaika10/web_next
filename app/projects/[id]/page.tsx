@@ -55,11 +55,16 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
   const { id } = params;
   if (!supabase) return notFound();
 
-  const { data: project, error } = await supabase
-    .from('projects')
-    .select('id, title, description, content, content_html, image_url, technologies, created_at, link, metrics, matrix')
-    .eq('id', id)
-    .single();
+  const richColumns = 'id, title, description, content, content_html, image_url, technologies, created_at, link, demo_url, deploy_demo_url, github_url, git_url, repository_url, metrics, matrix';
+  const safeColumns = 'id, title, description, content, content_html, image_url, technologies, created_at, link, metrics, matrix';
+
+  let query = await supabase.from('projects').select(richColumns).eq('id', id).single();
+  const isMissingColumn = query.error?.message?.toLowerCase().includes('does not exist');
+  if (isMissingColumn) {
+    query = await supabase.from('projects').select(safeColumns).eq('id', id).single();
+  }
+
+  const { data: project, error } = query;
 
   if (error || !project) return notFound();
 
@@ -67,8 +72,8 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
     ...project,
     imageUrl: project.image_url,
     createdAt: project.created_at || new Date().toISOString(),
-    demoUrl: project.link,
-    githubUrl: '',
+    demoUrl: (project as any).demo_url || (project as any).deploy_demo_url || project.link,
+    githubUrl: (project as any).github_url || (project as any).git_url || (project as any).repository_url || '',
     metrics: Array.isArray(project.metrics)
       ? project.metrics
       : Array.isArray(project.matrix)
