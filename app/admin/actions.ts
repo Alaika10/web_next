@@ -96,3 +96,36 @@ export async function updateProfile(profileData: Record<string, unknown>) {
     return { success: false, error: (error as Error).message };
   }
 }
+
+export async function createProject() {
+  try {
+    await assertAdminSession();
+    const supabase = getSupabase();
+
+    const payload = {
+      title: 'Untitled Project',
+      description: 'Draft...',
+      content: '',
+      image_url: '',
+      technologies: [],
+      link: '',
+    };
+
+    const { data, error } = await supabase
+      .from('projects')
+      .insert([payload])
+      .select('id')
+      .single();
+
+    if (error) throw error;
+    if (!data?.id) throw new Error('Project created but ID was not returned.');
+
+    revalidatePath('/projects');
+    revalidatePath('/');
+
+    return { success: true, id: String(data.id) };
+  } catch (error) {
+    console.error('[Server Action] Create Project Error:', error);
+    return { success: false, error: (error as Error).message };
+  }
+}

@@ -1,31 +1,46 @@
 import { MetadataRoute } from 'next';
 import { supabase } from '../lib/supabase';
+import { getSiteUrl } from '../lib/site';
+
+export const revalidate = 3600;
+
+const staticRoutes = ['/', '/projects', '/blog', '/about', '/certifications', '/github'];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://datalab.alex.studio';
+  const siteUrl = getSiteUrl();
+  const now = new Date();
 
-  const routes = ['', '/projects', '/blog', '/about'].map((route) => ({
-    url: `${baseUrl}${route}`,
-    lastModified: new Date(),
+  const routes: MetadataRoute.Sitemap = staticRoutes.map((route) => ({
+    url: `${siteUrl}${route}`,
+    lastModified: now,
+    changeFrequency: route === '/' ? 'daily' : 'weekly',
+    priority: route === '/' ? 1 : 0.7,
   }));
 
-  let projectUrls: any[] = [];
-  let blogUrls: any[] = [];
+  if (!supabase) return routes;
 
-  if (supabase) {
-    const { data: projects } = await supabase.from('projects').select('id');
-    const { data: blogs } = await supabase.from('blogs').select('id');
+  try {
+    const [projectsResult, blogsResult] = await Promise.all([
+      supabase.from('projects').select('id, updated_at'),
+      supabase.from('blogs').select('id, updated_at'),
+    ]);
 
-    projectUrls = (projects || []).map((p) => ({
-      url: `${baseUrl}/projects/${p.id}`,
-      lastModified: new Date(),
+    const projectUrls: MetadataRoute.Sitemap = (projectsResult.data || []).map((project) => ({
+      url: `${siteUrl}/projects/${project.id}`,
+      lastModified: project.updated_at ? new Date(project.updated_at) : now,
+      changeFrequency: 'weekly',
+      priority: 0.8,
     }));
 
-    blogUrls = (blogs || []).map((b) => ({
-      url: `${baseUrl}/blog/${b.id}`,
-      lastModified: new Date(),
+    const blogUrls: MetadataRoute.Sitemap = (blogsResult.data || []).map((blog) => ({
+      url: `${siteUrl}/blog/${blog.id}`,
+      lastModified: blog.updated_at ? new Date(blog.updated_at) : now,
+      changeFrequency: 'weekly',
+      priority: 0.8,
     }));
+
+    return [...routes, ...projectUrls, ...blogUrls];
+  } catch {
+    return routes;
   }
-
-  return [...routes, ...projectUrls, ...blogUrls];
 }

@@ -3,9 +3,11 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
+import { access } from 'node:fs/promises';
+import path from 'node:path';
 import { supabase } from '../lib/supabase';
 import { INITIAL_PROFILE } from '../constants';
-import { ArrowUpRight, Award, ShieldCheck, Activity } from 'lucide-react';
+import { ArrowUpRight, Award, ShieldCheck, Activity, Download } from 'lucide-react';
 import { unstable_cache } from 'next/cache';
 
 const HomeRadarChart = dynamic(() => import('../components/HomeRadarChart'), { 
@@ -36,9 +38,11 @@ const getHomeData = unstable_cache(async () => {
 
 export default async function HomePage() {
   const { projects, blogs, certs, profile } = await getHomeData();
+  const cvPath = path.join(process.cwd(), 'public', 'cv.pdf');
+  const hasCv = await access(cvPath).then(() => true).catch(() => false);
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden">
+    <div className="relative min-h-screen overflow-x-hidden bg-gradient-to-br from-slate-50 via-indigo-50 to-violet-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 text-slate-900 dark:text-slate-100">
       <div className="space-y-24 py-8 px-6 md:px-12 max-w-7xl mx-auto pb-24">
         {/* HERO */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center pt-2 md:pt-6">
@@ -49,24 +53,33 @@ export default async function HomePage() {
                 <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-indigo-400 opacity-75"></span>
               </span>
               <span className="font-mono text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">
-                System_Node: Online / Latency: Optimal
+                Terbuka untuk Kolaborasi dan Proyek Baru
               </span>
             </div>
             <div className="space-y-3">
               <h1 className="text-4xl md:text-6xl xl:text-7xl font-black leading-[1.1] tracking-tighter">
-                Crafting <span className="text-slate-400">Intelligence.</span> <br/>
-                <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+                Crafting <span className="text-slate-400 dark:text-slate-500">Intelligence.</span> <br/>
+                <span className="bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400 bg-clip-text text-transparent">
                   {profile.title}
                 </span>
               </h1>
               <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-xl leading-relaxed">
-                {profile.about}
+               Alaika digital Labs website showcasing projects, technical skills, and professional experience in web development and computer science. Built with a focus on performance, clean architecture, and scalability, this site highlights real-world projects, technical blogs, and certifications while delivering a fast, responsive, and user-friendly experience.
               </p>
             </div>
             <div className="flex flex-wrap gap-3 pt-2">
-              <Link href="/projects" className="px-6 py-3.5 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center gap-2">
+              <Link href="/projects" className="px-6 py-3.5 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400 transition-all flex items-center gap-2">
                 Explore Repository <ArrowUpRight size={16} />
               </Link>
+              {hasCv ? (
+                <a href="/cv.pdf" download className="px-6 py-3.5 bg-white/90 dark:bg-slate-900/80 text-indigo-700 dark:text-indigo-300 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-indigo-200 dark:border-indigo-700/60 hover:bg-white dark:hover:bg-slate-900 transition-all flex items-center gap-2">
+                  Lihat CV <Download size={16} />
+                </a>
+              ) : (
+                <button type="button" disabled className="px-6 py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-slate-200 dark:border-slate-700 cursor-not-allowed flex items-center gap-2">
+                  CV belum tersedia <Download size={16} />
+                </button>
+              )}
             </div>
           </div>
           <div className="lg:col-span-5 xl:col-span-4 relative flex items-center justify-center min-h-[350px]">
@@ -79,12 +92,17 @@ export default async function HomePage() {
         {/* PROJECTS */}
         <section className="space-y-10">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-            <h2 className="text-3xl md:text-4xl font-black tracking-tighter">Selected Models.</h2>
-            <Link href="/projects" className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:underline">View All</Link>
+            <div className="space-y-2">
+              <h2 className="text-3xl md:text-4xl font-black tracking-tighter">Selected Models.</h2>
+              <p className="text-sm text-slate-600 dark:text-slate-400 max-w-2xl">
+                Koleksi proyek unggulan yang menampilkan implementasi teknologi dan pendekatan problem-solving terbaru.
+              </p>
+            </div>
+            <Link href="/projects" className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-300 hover:underline">View All</Link>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {projects.map((project, idx) => (
-              <Link key={project.id} href={`/projects/${project.id}`} className="group relative bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden border border-slate-200 dark:border-slate-800 hover:shadow-xl transition-all">
+              <Link key={project.id} href={`/projects/${project.id}`} className="group relative bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden border border-slate-200 dark:border-slate-800 hover:shadow-xl dark:hover:shadow-indigo-950/30 transition-all">
                 <div className="h-[300px] overflow-hidden relative bg-slate-100 dark:bg-slate-900">
                   {project.imageUrl && (
                     <Image src={project.imageUrl} alt={project.title} fill sizes="(max-width: 768px) 100vw, 600px" priority={idx === 0} className="object-cover grayscale group-hover:grayscale-0 opacity-90 group-hover:opacity-100 transition-all duration-700" quality={75} />
@@ -107,10 +125,13 @@ export default async function HomePage() {
               <Activity size={12} className="animate-pulse" /> Verified_Credentials
             </div>
             <h2 className="text-3xl md:text-4xl font-black tracking-tighter">Verified Authority.</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400 max-w-2xl">
+              Ringkasan sertifikasi profesional yang memvalidasi kompetensi teknis dan kredibilitas keahlian.
+            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {certs.map((cert) => (
-              <div key={cert.id} className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] hover:shadow-xl transition-all group flex flex-col gap-4">
+              <div key={cert.id} className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] hover:shadow-xl dark:hover:shadow-indigo-950/30 transition-all group flex flex-col gap-4">
                 <div className="flex justify-between items-start">
                   <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center p-2 group-hover:rotate-6 transition-transform">
                     {cert.imageUrl ? (
@@ -128,7 +149,7 @@ export default async function HomePage() {
                 </div>
                 <div>
                   <h3 className="font-black text-base line-clamp-1">{cert.title}</h3>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{cert.issuer}</p>
+                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{cert.issuer}</p>
                 </div>
               </div>
             ))}
@@ -137,8 +158,11 @@ export default async function HomePage() {
 
         {/* BLOG */}
         <section className="space-y-10">
-          <div className="border-b border-slate-200 dark:border-slate-800 pb-8">
+          <div className="border-b border-slate-200 dark:border-slate-800 pb-8 space-y-2">
             <h2 className="text-3xl md:text-4xl font-black tracking-tighter">The Data Journal.</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400 max-w-2xl">
+              Catatan insight, pembelajaran, dan eksplorasi topik data, AI, serta pengembangan produk digital.
+            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             {blogs.map(post => (
@@ -148,8 +172,8 @@ export default async function HomePage() {
                     {post.imageUrl && <Image src={post.imageUrl} alt={post.title} fill sizes="(max-width: 768px) 100vw, 400px" className="object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all" quality={60} />}
                   </div>
                   <div className="space-y-2">
-                    <span className="font-mono text-[8px] text-indigo-600 font-black uppercase tracking-widest">{post.date}</span>
-                    <h3 className="text-lg font-black tracking-tight leading-snug group-hover:text-indigo-600 transition-colors">{post.title}</h3>
+                    <span className="font-mono text-[8px] text-indigo-600 dark:text-indigo-300 font-black uppercase tracking-widest">{post.date}</span>
+                    <h3 className="text-lg font-black tracking-tight leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">{post.title}</h3>
                   </div>
                 </Link>
               </article>

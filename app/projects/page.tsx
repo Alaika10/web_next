@@ -13,8 +13,9 @@ export default async function ProjectsPage() {
   if (supabase) {
     const { data } = await supabase
       .from('projects')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select('id, title, description, image_url, technologies, created_at')
+      .order('created_at', { ascending: false })
+      .limit(24);
     
     if (data) {
       projects = data.map((p: any) => ({

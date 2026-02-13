@@ -11,9 +11,10 @@ interface HeaderProps {
   onAddBlog: () => void;
   onSaveProfile: () => void;
   onAddCertification?: () => void;
+  canSaveProfile?: boolean;
 }
 
-export default function AdminHeader({ activeTab, isSupabase, isSaving, onAddProject, onAddBlog, onSaveProfile, onAddCertification }: HeaderProps) {
+export default function AdminHeader({ activeTab, isSupabase, isSaving, onAddProject, onAddBlog, onSaveProfile, onAddCertification, canSaveProfile = true }: HeaderProps) {
   return (
     <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
       <div className="space-y-2">
@@ -53,8 +54,12 @@ export default function AdminHeader({ activeTab, isSupabase, isSaving, onAddProj
           </button>
         )}
         {activeTab === DashboardTab.PROFILE && (
-          <button onClick={onSaveProfile} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/10 hover:bg-emerald-700 transition-all active:scale-95">
-            <Save size={16} /> Update Profile
+          <button
+            onClick={onSaveProfile}
+            disabled={isSaving || !canSaveProfile}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/10 hover:bg-emerald-700 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <Save size={16} /> {canSaveProfile ? 'Update Profile' : 'No Changes'}
           </button>
         )}
       </div>

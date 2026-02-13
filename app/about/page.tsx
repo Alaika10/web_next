@@ -13,7 +13,10 @@ export default async function AboutPage() {
   let profile = INITIAL_PROFILE;
 
   if (supabase) {
-    const { data } = await supabase.from('profiles').select('*').single();
+    const { data } = await supabase
+      .from('profiles')
+      .select('name, title, about, avatar, socials, skills, experience')
+      .single();
     if (data) profile = data;
   }
 
