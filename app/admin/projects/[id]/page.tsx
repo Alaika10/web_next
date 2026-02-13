@@ -62,7 +62,7 @@ export default function ProjectEditorPage() {
       try {
         const { data, error } = await supabase
           .from('projects')
-          .select('id, title, description, content, image_url, technologies, created_at, demo_url, deploy_demo_url, link, github_url, git_url, repository_url, metrics, matrix')
+          .select('id, title, description, content, image_url, technologies, created_at, link, metrics, matrix')
           .eq('id', id)
           .single();
         if (error) throw error;
@@ -74,8 +74,8 @@ export default function ProjectEditorPage() {
             createdAt: data.created_at || new Date().toISOString(),
             imageUrl: data.image_url || '',
             technologies: Array.isArray(data.technologies) ? data.technologies : [],
-            demoUrl: data.demo_url || data.deploy_demo_url || data.link || '',
-            githubUrl: data.github_url || data.git_url || data.repository_url || '',
+            demoUrl: data.link || '',
+            githubUrl: '',
             metrics: normalizeMetrics(data.metrics || data.matrix),
           });
         }

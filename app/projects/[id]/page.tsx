@@ -57,7 +57,7 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
 
   const { data: project, error } = await supabase
     .from('projects')
-    .select('id, title, description, content, content_html, image_url, technologies, created_at, link, demo_url, deploy_demo_url, github_url, git_url, repository_url, metrics, matrix')
+    .select('id, title, description, content, content_html, image_url, technologies, created_at, link, metrics, matrix')
     .eq('id', id)
     .single();
 
@@ -67,8 +67,8 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
     ...project,
     imageUrl: project.image_url,
     createdAt: project.created_at || new Date().toISOString(),
-    demoUrl: project.demo_url || project.deploy_demo_url || project.link,
-    githubUrl: project.github_url || project.git_url || project.repository_url,
+    demoUrl: project.link,
+    githubUrl: '',
     metrics: Array.isArray(project.metrics)
       ? project.metrics
       : Array.isArray(project.matrix)
