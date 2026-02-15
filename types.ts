@@ -8,6 +8,12 @@ export interface Project {
   imageUrl: string;
   technologies: string[];
   link: string;
+  demoUrl?: string;
+  githubUrl?: string;
+  metrics?: Array<{
+    label: string;
+    value: string;
+  }>;
   createdAt: string;
 }
 

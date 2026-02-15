@@ -2,6 +2,7 @@
 'use client';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, User as UserIcon, Menu, X, ArrowRight, Github } from 'lucide-react';
 
@@ -81,8 +82,15 @@ const Navbar: React.FC = () => {
       >
         <div className="max-w-7xl mx-auto flex justify-between items-center px-6 md:px-12 h-14">
           <Link href="/" className="flex items-center gap-3 group relative z-[160] active:scale-95 transition-transform">
-            <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black shadow-[0_8px_16px_-4px_rgba(79,70,229,0.4)] group-hover:rotate-6 transition-transform">
-              D
+            <div className="relative w-9 h-9 group-hover:rotate-6 transition-transform">
+              <Image
+                src="/logo.png"
+                alt="DataLabs logo"
+                fill
+                sizes="36px"
+                className="object-contain"
+                priority
+              />
             </div>
             <span className="font-black text-lg tracking-tighter uppercase text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
               DataLabs

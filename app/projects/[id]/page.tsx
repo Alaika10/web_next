@@ -10,6 +10,7 @@ import Image from 'next/image';
 import SocialShare from '../../../components/SocialShare';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
+import { getSiteUrl } from '../../../lib/site';
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const { id } = params;
@@ -24,14 +25,18 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 
     if (!project) return { title: 'Project Not Found' };
 
-    const ogImageUrl = `/api/og/project/${id}`;
+    const siteUrl = getSiteUrl();
+    const ogImageUrl = `${siteUrl}/api/og/project/${id}`;
 
     return {
+      alternates: { canonical: `/projects/${id}` },
       title: project.title,
       description: project.description,
       openGraph: {
         title: project.title,
         description: project.description,
+        type: 'article',
+        url: `${siteUrl}/projects/${id}`,
         images: [{ url: ogImageUrl, width: 1200, height: 630 }],
       },
       twitter: {
@@ -42,7 +47,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       },
     };
   } catch (e) {
-    return { title: 'Project Detail' };
+    return { title: 'Project Detail', alternates: { canonical: `/projects/${id}` } };
   }
 }
 
@@ -50,17 +55,30 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
   const { id } = params;
   if (!supabase) return notFound();
 
-  const { data: project, error } = await supabase
-    .from('projects')
-    .select('*')
-    .eq('id', id)
-    .single();
+  const richColumns = 'id, title, description, content, content_html, image_url, technologies, created_at, link, demo_url, deploy_demo_url, github_url, git_url, repository_url, metrics, matrix';
+  const safeColumns = 'id, title, description, content, content_html, image_url, technologies, created_at, link, metrics, matrix';
+
+  let query = await supabase.from('projects').select(richColumns).eq('id', id).single();
+  const isMissingColumn = query.error?.message?.toLowerCase().includes('does not exist');
+  if (isMissingColumn) {
+    query = await supabase.from('projects').select(safeColumns).eq('id', id).single();
+  }
+
+  const { data: project, error } = query;
 
   if (error || !project) return notFound();
 
   const currentProject: Project = {
     ...project,
-    imageUrl: project.image_url
+    imageUrl: project.image_url,
+    createdAt: project.created_at || new Date().toISOString(),
+    demoUrl: (project as any).demo_url || (project as any).deploy_demo_url || project.link,
+    githubUrl: (project as any).github_url || (project as any).git_url || (project as any).repository_url || '',
+    metrics: Array.isArray(project.metrics)
+      ? project.metrics
+      : Array.isArray(project.matrix)
+        ? project.matrix
+        : []
   };
 
   return (
@@ -90,18 +108,29 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
 
           <div className="lg:col-span-4 flex flex-col justify-end gap-6">
             <div className="p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] space-y-6 shadow-sm">
-               <div className="flex items-center justify-between">
-                 <span className="font-mono-tech text-[10px] uppercase text-slate-400">System Accuracy</span>
-                 <span className="font-mono-tech text-xs font-black text-emerald-500">98.4%</span>
+               <div className="space-y-2">
+                 {currentProject.metrics && currentProject.metrics.length > 0 ? (
+                   currentProject.metrics.slice(0, 2).map((metric, idx) => (
+                     <div key={`${metric.label}-${idx}`} className="flex items-center justify-between">
+                       <span className="font-mono-tech text-[10px] uppercase text-slate-400">{metric.label}</span>
+                       <span className="font-mono-tech text-xs font-black text-emerald-500">{metric.value}</span>
+                     </div>
+                   ))
+                 ) : (
+                   <div className="flex items-center justify-between">
+                     <span className="font-mono-tech text-[10px] uppercase text-slate-400">System Accuracy</span>
+                     <span className="font-mono-tech text-xs font-black text-emerald-500">98.4%</span>
+                   </div>
+                 )}
                </div>
                <div className="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                  <div className="w-[98%] h-full bg-emerald-500"></div>
                </div>
                <div className="flex gap-4">
-                 <a href={currentProject.link} className="flex-1 flex items-center justify-center gap-2 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all">
+                 <a href={currentProject.demoUrl || currentProject.link || '#'} className="flex-1 flex items-center justify-center gap-2 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all">
                    Deploy <ExternalLink size={12} />
                  </a>
-                 <a href="#" className="w-14 h-14 flex items-center justify-center border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-400 hover:text-indigo-600 hover:border-indigo-600 transition-all">
+                 <a href={currentProject.githubUrl || '#'} className="w-14 h-14 flex items-center justify-center border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-400 hover:text-indigo-600 hover:border-indigo-600 transition-all">
                    <Github size={20} />
                  </a>
                </div>
