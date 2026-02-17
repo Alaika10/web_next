@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     default: 'DataLabs by Alaika Izatul Ilmi',
     template: '%s | DataLabs',
   },
-  description: 'Alaika digital Labs website showcasing projects, technical skills, and professional experience in web development and computer science. Built with a focus on performance, clean architecture, and scalability, this site highlights real-world projects, technical blogs, and certifications while delivering a fast, responsive, and user-friendly experience.',
+  description: 'Alaika\'s official digital platform focuses on Data Science and Machine Learning Engineering. This website showcases a portfolio of projects based on data analysis, machine learning, and AI, technical articles about data and technology, professional certifications, and contact information for research and industry collaboration.',
   robots: {
     index: true,
     follow: true,
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'DataLabs by Alaika Izatul Ilmi',
-    description: 'Alaika digital Labs website showcasing projects, technical skills, and professional experience in web development and computer science. Built with a focus on performance, clean architecture, and scalability, this site highlights real-world projects, technical blogs, and certifications while delivering a fast, responsive, and user-friendly experience.',
+    description: 'Alaika\'s official digital platform focuses on Data Science and Machine Learning Engineering. This website showcases a portfolio of projects based on data analysis, machine learning, and AI, technical articles about data and technology, professional certifications, and contact information for research and industry collaboration.',
     url: deploymentUrl,
     siteName: 'DataLabs by Alaika Izatul Ilmi',
     type: 'website',
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'DataLabs by Alaika Izatul Ilmi',
-    description: 'Alaika digital Labs website showcasing projects, technical skills, and professional experience in web development and computer science. Built with a focus on performance, clean architecture, and scalability, this site highlights real-world projects, technical blogs, and certifications while delivering a fast, responsive, and user-friendly experience.',
+    description: 'Alaika\'s official digital platform focuses on Data Science and Machine Learning Engineering. This website showcases a portfolio of projects based on data analysis, machine learning, and AI, technical articles about data and technology, professional certifications, and contact information for research and industry collaboration.',
   },
   icons: {
     icon: [

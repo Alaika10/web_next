@@ -64,7 +64,7 @@ export default async function HomePage() {
                 </span>
               </h1>
               <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-xl leading-relaxed">
-               Alaika digital Labs website showcasing projects, technical skills, and professional experience in web development and computer science. Built with a focus on performance, clean architecture, and scalability, this site highlights real-world projects, technical blogs, and certifications while delivering a fast, responsive, and user-friendly experience.
+               Alaika's official digital platform focuses on Data Science and Machine Learning Engineering. This website showcases a portfolio of projects based on data analysis, machine learning, and AI, technical articles about data and technology, professional certifications, and contact information for research and industry collaboration.
               </p>
             </div>
             <div className="flex flex-wrap gap-3 pt-2">
