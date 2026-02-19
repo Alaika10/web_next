@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { supabase } from '../../../lib/supabase';
 import { BlogPost } from '../../../types';
@@ -14,16 +13,6 @@ import { getSiteUrl } from '../../../lib/site';
 export const dynamicParams = true;
 export const revalidate = 300;
 
-function resolveMetadataImage(imageUrl: string | null | undefined, siteUrl: string): string {
-  if (!imageUrl) return `${siteUrl}/api/og/blog/default`;
-
-  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-    return imageUrl;
-  }
-
-  return `${siteUrl}${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
-}
-
 // Static Site Generation: Membuat halaman detail menjadi HTML statis saat build
 export async function generateStaticParams() {
   if (!supabase) return [];
@@ -33,16 +22,18 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   if (!supabase) return {};
+
   const { data: post } = await supabase
     .from('blogs')
-    .select('title, excerpt, image_url')
+    .select('title, excerpt')
     .eq('id', params.id)
     .single();
+
   if (!post) return { title: 'Not Found' };
 
   const siteUrl = getSiteUrl();
-  const ogImageUrl = resolveMetadataImage(post.image_url, siteUrl);
   const description = post.excerpt || 'Baca artikel terbaru di DataLabs.';
+  const ogImageUrl = `${siteUrl}/api/og/blog/${params.id}`;
 
   return {
     title: post.title,
@@ -53,6 +44,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       description,
       type: 'article',
       url: `${siteUrl}/blog/${params.id}`,
+      siteName: 'DataLabs by Alaika Izatul Ilmi',
       images: [{ url: ogImageUrl, width: 1200, height: 630, alt: post.title }],
     },
     twitter: {
