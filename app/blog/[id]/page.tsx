@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { supabase } from '../../../lib/supabase';
 import { BlogPost } from '../../../types';
@@ -11,6 +10,9 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { getSiteUrl } from '../../../lib/site';
 
+export const dynamicParams = true;
+export const revalidate = 300;
+
 // Static Site Generation: Membuat halaman detail menjadi HTML statis saat build
 export async function generateStaticParams() {
   if (!supabase) return [];
@@ -20,27 +22,35 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   if (!supabase) return {};
-  const { data: post } = await supabase.from('blogs').select('title, excerpt').eq('id', params.id).single();
+
+  const { data: post } = await supabase
+    .from('blogs')
+    .select('title, excerpt')
+    .eq('id', params.id)
+    .single();
+
   if (!post) return { title: 'Not Found' };
 
   const siteUrl = getSiteUrl();
+  const description = post.excerpt || 'Baca artikel terbaru di DataLabs.';
   const ogImageUrl = `${siteUrl}/api/og/blog/${params.id}`;
 
   return {
     title: post.title,
-    description: post.excerpt,
+    description,
     alternates: { canonical: `/blog/${params.id}` },
     openGraph: {
       title: post.title,
-      description: post.excerpt,
+      description,
       type: 'article',
       url: `${siteUrl}/blog/${params.id}`,
-      images: [{ url: ogImageUrl, width: 1200, height: 630 }],
+      siteName: 'DataLabs by Alaika Izatul Ilmi',
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: post.title }],
     },
     twitter: {
       card: 'summary_large_image',
       title: post.title,
-      description: post.excerpt,
+      description,
       images: [ogImageUrl],
     },
   };
