@@ -41,9 +41,9 @@ export default function TypingRole() {
   }, [displayedText, isDeleting, roleIndex]);
 
   return (
-    <span className="inline-flex items-center">
-      {displayedText}
-      <span className="ml-1 inline-block h-[1em] w-[2px] animate-pulse bg-current" aria-hidden="true" />
+    <span className="inline-flex items-center whitespace-nowrap text-indigo-600 dark:text-indigo-300">
+      <span className="inline-block min-w-[14ch]">{displayedText}</span>
+      <span className="typing-caret ml-1" aria-hidden="true" />
       <span className="sr-only">{roles[roleIndex]}</span>
     </span>
   );

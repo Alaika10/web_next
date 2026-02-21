@@ -58,12 +58,10 @@ export default async function HomePage() {
               </span>
             </div>
             <div className="space-y-3">
-              <h1 className="text-4xl md:text-6xl xl:text-7xl font-black leading-[1.1] tracking-tighter">
-                Crafting <span className="text-slate-400 dark:text-slate-500">Intelligence.</span> <br/>
-                <span className="inline-flex items-end gap-3">
-                  <span className="bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400 bg-clip-text text-transparent text-2xl md:text-4xl xl:text-5xl">
-                    <TypingRole />
-                  </span>
+              <h1 className="text-4xl md:text-6xl xl:text-7xl font-black leading-[1.05] tracking-tighter">
+                <span className="block">Crafting <span className="text-slate-400 dark:text-slate-500">Intelligence.</span></span>
+                <span className="mt-2 block min-h-[1.2em] text-[1.8rem] md:text-[2.6rem] xl:text-[3.1rem] leading-none">
+                  <TypingRole />
                 </span>
               </h1>
               <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-xl leading-relaxed">
