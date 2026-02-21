@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase';
 import { INITIAL_PROFILE } from '../constants';
 import { ArrowUpRight, Award, ShieldCheck, Activity, Download } from 'lucide-react';
 import { unstable_cache } from 'next/cache';
+import TypingRole from '../components/TypingRole';
 
 const HomeRadarChart = dynamic(() => import('../components/HomeRadarChart'), { 
   ssr: false,
@@ -57,10 +58,10 @@ export default async function HomePage() {
               </span>
             </div>
             <div className="space-y-3">
-              <h1 className="text-4xl md:text-6xl xl:text-7xl font-black leading-[1.1] tracking-tighter">
-                Crafting <span className="text-slate-400 dark:text-slate-500">Intelligence.</span> <br/>
-                <span className="bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400 bg-clip-text text-transparent">
-                  {profile.title}
+              <h1 className="text-4xl md:text-6xl xl:text-7xl font-black leading-[1.05] tracking-tighter">
+                <span className="block">Crafting <span className="text-slate-400 dark:text-slate-500">Intelligence.</span></span>
+                <span className="mt-2 block min-h-[1.2em] text-[1.8rem] md:text-[2.6rem] xl:text-[3.1rem] leading-none">
+                  <TypingRole />
                 </span>
               </h1>
               <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-xl leading-relaxed">
@@ -107,10 +108,16 @@ export default async function HomePage() {
                   {project.imageUrl && (
                     <Image src={project.imageUrl} alt={project.title} fill sizes="(max-width: 768px) 100vw, 600px" priority={idx === 0} className="object-cover grayscale group-hover:grayscale-0 opacity-90 group-hover:opacity-100 transition-all duration-700" quality={75} />
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 to-transparent"></div>
-                  <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end text-white">
-                    <h3 className="text-2xl font-black tracking-tighter">{project.title}</h3>
-                    <ArrowUpRight size={20} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/25 to-transparent"></div>
+                  <div className="absolute bottom-5 left-6 right-6 text-white">
+                    <div className="flex items-end justify-between gap-4 transition-all duration-500 group-hover:-translate-y-10">
+                      <h3 className="text-2xl font-black tracking-tighter">{project.title}</h3>
+                      <ArrowUpRight size={20} className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                    <div className="mt-2 h-px w-full bg-white/35 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                    <p className="mt-2 rounded-2xl border border-white/20 bg-slate-950/55 px-4 py-3 text-sm text-slate-100 backdrop-blur-sm opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 line-clamp-3">
+                      {project.description || 'Eksplorasi lengkap ada di detail proyek ini.'}
+                    </p>
                   </div>
                 </div>
               </Link>
