@@ -1,16 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 const roles = ['Data Scientist', 'AI Engineer'];
 const TYPING_SPEED = 90;
 const DELETING_SPEED = 55;
-const HOLD_DURATION = 1400;
+const HOLD_DURATION = 2000;
 
 export default function TypingRole() {
   const [roleIndex, setRoleIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const longestRole = useMemo(
+    () => roles.reduce((longest, role) => (role.length > longest.length ? role : longest), roles[0]),
+    []
+  );
 
   useEffect(() => {
     const currentRole = roles[roleIndex];
@@ -41,9 +46,12 @@ export default function TypingRole() {
   }, [displayedText, isDeleting, roleIndex]);
 
   return (
-    <span className="inline-flex items-center whitespace-nowrap text-indigo-600 dark:text-indigo-300">
-      <span className="inline-block min-w-[14ch]">{displayedText}</span>
-      <span className="typing-caret ml-1" aria-hidden="true" />
+    <span className="relative inline-block align-baseline text-indigo-600 dark:text-indigo-300">
+      <span className="invisible">{longestRole}</span>
+      <span className="absolute inset-0 inline-flex items-center whitespace-nowrap">
+        <span>{displayedText}</span>
+        <span className="typing-caret ml-1" aria-hidden="true" />
+      </span>
       <span className="sr-only">{roles[roleIndex]}</span>
     </span>
   );
